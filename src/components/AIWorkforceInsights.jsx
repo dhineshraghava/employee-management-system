@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Sparkles,
-  Bot,
+  Activity,
+  FileText,
   AlertTriangle,
   TrendingUp,
   Clock,
@@ -30,8 +30,8 @@ export default function AIWorkforceInsights({ onActionClick }) {
         setInsights(res.data);
       }
     } catch (err) {
-      console.error('Failed to load AI insights:', err);
-      setError('Unable to fetch live AI insights from database.');
+      console.error('Failed to load operations insights:', err);
+      setError('Unable to fetch live workforce metrics from database.');
     } finally {
       setLoading(false);
     }
@@ -47,9 +47,9 @@ export default function AIWorkforceInsights({ onActionClick }) {
     return (
       <div className="ai-insights-card loading-state">
         <div className="flex-align-center gap-10">
-          <Sparkles className="spin-icon text-purple" size={20} />
+          <RefreshCw className="spin-icon text-primary" size={20} />
           <span className="text-sm font-semibold text-secondary">
-            AI Workforce Intelligence Engine analyzing live attendance & task records...
+            Loading live attendance & workload operations data from database...
           </span>
         </div>
       </div>
@@ -73,19 +73,19 @@ export default function AIWorkforceInsights({ onActionClick }) {
 
   return (
     <div className="ai-insights-card">
-      {/* Header with AI Gradient Banner */}
+      {/* Header with Enterprise Analytics Banner */}
       <div className="ai-card-header">
         <div className="ai-brand-group">
           <div className="ai-avatar-badge">
-            <Sparkles size={20} className="icon-ai-glow" />
+            <Activity size={20} className="icon-ai-glow" />
           </div>
           <div>
             <div className="flex-align-center gap-8">
-              <h3 className="ai-card-title">AI Workforce Intelligence</h3>
-              <span className="ai-chip-pill">Live AI Analytics</span>
+              <h3 className="ai-card-title">Workforce Operations Analytics</h3>
+              <span className="ai-chip-pill">Live Database Metrics</span>
             </div>
             <p className="ai-card-subtitle">
-              Continuous predictive analysis & workload optimization grounded in <code>emp_db</code>
+              Real-time workload distribution & attendance tracking grounded in <code>emp_db</code>
             </p>
           </div>
         </div>
@@ -103,10 +103,10 @@ export default function AIWorkforceInsights({ onActionClick }) {
             className="btn-ai-refresh"
             onClick={fetchInsights}
             disabled={loading}
-            title="Re-run AI analysis"
+            title="Refresh analytics data"
           >
             <RefreshCw size={14} className={loading ? 'spin-icon' : ''} />
-            <span>Analyze</span>
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function AIWorkforceInsights({ onActionClick }) {
           className={`ai-tab-btn ${activeTab === 'briefing' ? 'active' : ''}`}
           onClick={() => setActiveTab('briefing')}
         >
-          <Bot size={15} />
+          <FileText size={15} />
           <span>Executive Briefing</span>
         </button>
 
@@ -146,7 +146,7 @@ export default function AIWorkforceInsights({ onActionClick }) {
           onClick={() => setActiveTab('recommendations')}
         >
           <Zap size={15} />
-          <span>Smart Actions ({smartSuggestions.length})</span>
+          <span>Actionable Recommendations ({smartSuggestions.length})</span>
         </button>
       </div>
 
@@ -155,7 +155,7 @@ export default function AIWorkforceInsights({ onActionClick }) {
         <div className="ai-tab-pane">
           <div className="executive-briefing-box">
             <div className="briefing-icon-column">
-              <Bot size={28} className="text-purple" />
+              <FileText size={28} className="text-primary" />
             </div>
             <div className="briefing-text-content">
               <p className="briefing-p">{executiveBriefing}</p>
@@ -284,11 +284,11 @@ export default function AIWorkforceInsights({ onActionClick }) {
         </div>
       )}
 
-      {/* Grounding & Ethics Footer */}
+      {/* Data Verification Footer */}
       <div className="ai-card-footer">
         <Info size={13} className="text-muted" />
         <span>
-          Grounding note: Insights generated from live MySQL <code>emp_db</code>. AI recommendations are advisory and do not alter records without admin confirmation.
+          Grounding note: Operational metrics computed in real time from live MySQL <code>emp_db</code> records.
         </span>
       </div>
     </div>

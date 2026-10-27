@@ -183,7 +183,7 @@ export default function Dashboard() {
               className="btn btn-sm btn-primary"
               onClick={() => {
                 logout();
-                navigate('/login/admin');
+                navigate('/login');
               }}
               id="dashboard-btn-login-admin"
             >

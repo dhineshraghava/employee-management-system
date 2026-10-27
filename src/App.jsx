@@ -114,7 +114,7 @@ function MainLayout() {
         <Route path="/login" element={<Login />} />
         <Route path="/login/admin" element={<Navigate to="/login" replace />} />
         <Route path="/login/employee" element={<Navigate to="/login" replace />} />
-        <Route path="/register" element={<Login />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );

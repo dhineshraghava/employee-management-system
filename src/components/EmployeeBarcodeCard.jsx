@@ -7,10 +7,7 @@ import {
   ShieldCheck,
   Sparkles,
   QrCode,
-  User,
-  Mail,
   Briefcase,
-  Layers,
   X,
 } from 'lucide-react';
 
@@ -72,12 +69,12 @@ export default function EmployeeBarcodeCard({ employee, onClose, isModal = false
           </div>
           <div className="id-card-brand-info">
             <span className="id-card-brand-name">StaffPulse EMS</span>
-            <span className="id-card-brand-sub">Workforce OS Identity</span>
+            <span className="id-card-brand-sub">Corporate Staff ID</span>
           </div>
         </div>
         <div className="id-card-chip-badge">
-          <Sparkles size={11} />
-          <span>AI VERIFIED</span>
+          <ShieldCheck size={12} />
+          <span>OFFICIAL ID</span>
         </div>
       </div>
 
@@ -130,7 +127,7 @@ export default function EmployeeBarcodeCard({ employee, onClose, isModal = false
       {/* Card Footer Security Microprint */}
       <div className="id-card-footer">
         <ShieldCheck size={13} className="text-cyan" />
-        <span>StaffPulse Workforce Intelligence Security • Scan for Attendance</span>
+        <span>StaffPulse Employee Management System • Scan for Attendance</span>
       </div>
     </div>
   );

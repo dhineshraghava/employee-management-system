@@ -134,9 +134,9 @@ export async function getAIWorkforceInsights(req, res) {
     return res.status(200).json({
       success: true,
       timestamp: new Date().toISOString(),
-      model: 'Rule-Augmented AI Workforce Intelligence Engine',
+      model: 'Operational Workforce Analytics Engine',
       disclaimer:
-        'AI insights are generated deterministically from active MySQL emp_db records and provided as advisory recommendations.',
+        'Operational metrics are computed deterministically from active MySQL emp_db records.',
       healthScore,
       executiveBriefing,
       riskLevel:
