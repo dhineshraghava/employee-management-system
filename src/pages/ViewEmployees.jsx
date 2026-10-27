@@ -12,6 +12,7 @@ import {
 import EmployeeTable from '../components/EmployeeTable';
 import EmployeeDetails from '../components/EmployeeDetails';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import EmployeeBarcodeCard from '../components/EmployeeBarcodeCard';
 import {
   getAdminEmployees,
   getAdminEmployeeById,
@@ -35,6 +36,9 @@ export default function ViewEmployees() {
   // Profile Details modal state
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // Barcode Card modal state
+  const [barcodeTarget, setBarcodeTarget] = useState(null);
 
   // Reset Password modal state
   const [resetTarget, setResetTarget] = useState(null);
@@ -240,6 +244,7 @@ export default function ViewEmployees() {
         loading={loading}
         onDeleteRequest={handleDeleteRequest}
         onViewDetails={handleViewDetails}
+        onViewBarcodeCard={(emp) => setBarcodeTarget(emp)}
         onResetPassword={(emp) => {
           setResetTarget(emp);
           setNewPassword('');
@@ -247,6 +252,15 @@ export default function ViewEmployees() {
         }}
         searchTerm={searchTerm}
       />
+
+      {/* Barcode ID Card Modal */}
+      {barcodeTarget && (
+        <EmployeeBarcodeCard
+          employee={barcodeTarget}
+          isModal={true}
+          onClose={() => setBarcodeTarget(null)}
+        />
+      )}
 
       {/* View Profile Details Modal */}
       {selectedEmployee && (

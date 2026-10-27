@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { adminLogin as apiAdminLogin, employeeLogin as apiEmployeeLogin, getCurrentUser } from '../services/api';
+import {
+  unifiedLogin as apiUnifiedLogin,
+  registerUser as apiRegisterUser,
+  adminLogin as apiAdminLogin,
+  employeeLogin as apiEmployeeLogin,
+  getCurrentUser,
+  logoutUser,
+} from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -26,6 +33,9 @@ export function AuthProvider({ children }) {
           if (res.data?.success && res.data?.user) {
             setUser(res.data.user);
             localStorage.setItem('ems_user', JSON.stringify(res.data.user));
+            if (res.data.role) {
+              localStorage.setItem('ems_role', res.data.role);
+            }
           }
         } catch (err) {
           console.warn('Saved token expired or invalid:', err.message);
@@ -53,6 +63,60 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  /**
+   * Unified Login for both Admin and Employee
+   * Server determines the role and returns user + role + redirectUrl
+   */
+  const login = async (identifier, password, rememberMe = false) => {
+    const res = await apiUnifiedLogin({ identifier, password });
+    if (res.data?.success) {
+      const { token: newToken, user: userData, role: userRole, redirectUrl } = res.data;
+      setToken(newToken);
+      setUser(userData);
+      localStorage.setItem('ems_token', newToken);
+      localStorage.setItem('ems_user', JSON.stringify(userData));
+      localStorage.setItem('ems_role', userRole || userData.role || 'employee');
+
+      if (rememberMe) {
+        localStorage.setItem('ems_remembered_identifier', identifier);
+      } else {
+        localStorage.removeItem('ems_remembered_identifier');
+      }
+
+      return {
+        user: userData,
+        role: userRole || userData.role,
+        redirectUrl: redirectUrl || (userRole === 'admin' ? '/admin/dashboard' : '/employee/dashboard'),
+      };
+    }
+    throw new Error(res.data?.message || 'Authentication failed');
+  };
+
+  /**
+   * Role-based registration
+   */
+  const register = async (formData) => {
+    const res = await apiRegisterUser(formData);
+    if (res.data?.success) {
+      const { token: newToken, user: userData, role: userRole, redirectUrl } = res.data;
+      if (newToken && userData) {
+        setToken(newToken);
+        setUser(userData);
+        localStorage.setItem('ems_token', newToken);
+        localStorage.setItem('ems_user', JSON.stringify(userData));
+        localStorage.setItem('ems_role', userRole || userData.role || 'employee');
+      }
+      return {
+        user: userData,
+        role: userRole || userData?.role,
+        redirectUrl: redirectUrl || (userRole === 'admin' ? '/admin/dashboard' : '/employee/dashboard'),
+        message: res.data.message,
+      };
+    }
+    throw new Error(res.data?.message || 'Registration failed');
+  };
+
+  // Legacy wrappers for backward compatibility
   const loginAdmin = async (email, password) => {
     const res = await apiAdminLogin({ email, password });
     if (res.data?.success) {
@@ -82,6 +146,11 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    try {
+      logoutUser().catch(() => {});
+    } catch {
+      // ignore
+    }
     setUser(null);
     setToken(null);
     localStorage.removeItem('ems_token');
@@ -98,6 +167,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(token),
     isAdmin: currentRole === 'admin',
     isEmployee: currentRole === 'employee',
+    login,
+    register,
     loginAdmin,
     loginEmployee,
     logout,

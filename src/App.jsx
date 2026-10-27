@@ -15,6 +15,8 @@ import Attendance from './pages/Attendance';
 import Tasks from './pages/Tasks';
 import AdminReports from './pages/admin/AdminReports';
 import AdminLeaves from './pages/admin/AdminLeaves';
+import BarcodeAttendance from './pages/BarcodeAttendance';
+import AdminBarcodeCards from './pages/admin/AdminBarcodeCards';
 
 // Employee Portal Pages
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
@@ -30,9 +32,9 @@ import './App.css';
 function AdminRoute({ children }) {
   const { isAuthenticated, isAdmin, isEmployee, loading } = useAuth();
   if (loading) return <div className="app-loading-screen"><div className="loading-spinner"></div></div>;
-  if (!isAuthenticated) return <Navigate to="/login/admin" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (isEmployee) return <Navigate to="/employee/dashboard" replace />;
-  if (!isAdmin) return <Navigate to="/login/admin" replace />;
+  if (!isAdmin) return <Navigate to="/login" replace />;
   return children;
 }
 
@@ -40,9 +42,9 @@ function AdminRoute({ children }) {
 function EmployeeRoute({ children }) {
   const { isAuthenticated, isEmployee, isAdmin, loading } = useAuth();
   if (loading) return <div className="app-loading-screen"><div className="loading-spinner"></div></div>;
-  if (!isAuthenticated) return <Navigate to="/login/employee" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
-  if (!isEmployee) return <Navigate to="/login/employee" replace />;
+  if (!isEmployee) return <Navigate to="/login" replace />;
   return children;
 }
 
@@ -69,6 +71,8 @@ function MainLayout() {
     if (p.includes('/admin/employees/add')) return 'admin-add';
     if (p.includes('/admin/employees/') && p.includes('/edit')) return 'admin-edit';
     if (p.includes('/admin/employees')) return 'admin-employees';
+    if (p.includes('/admin/barcode-attendance')) return 'admin-barcode-attendance';
+    if (p.includes('/admin/barcode-cards')) return 'admin-barcode-cards';
     if (p.includes('/admin/attendance')) return 'admin-attendance';
     if (p.includes('/admin/leaves')) return 'admin-leaves';
     if (p.includes('/admin/tasks')) return 'admin-tasks';
@@ -76,6 +80,7 @@ function MainLayout() {
 
     if (p.includes('/employee/dashboard')) return 'employee-dashboard';
     if (p.includes('/employee/profile')) return 'employee-profile';
+    if (p.includes('/employee/barcode-attendance')) return 'employee-barcode-attendance';
     if (p.includes('/employee/attendance')) return 'employee-attendance';
     if (p.includes('/employee/leaves')) return 'employee-leaves';
     if (p.includes('/employee/tasks')) return 'employee-tasks';
@@ -102,13 +107,15 @@ function MainLayout() {
     return () => clearInterval(interval);
   }, [verifyBackendStatus]);
 
-  // If on login pages, render full screen without sidebars
-  if (location.pathname.startsWith('/login')) {
+  // If on login or registration pages, render full screen without sidebars
+  if (location.pathname.startsWith('/login') || location.pathname === '/register') {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/login/admin" element={<Login />} />
-        <Route path="/login/employee" element={<Login />} />
+        <Route path="/login/admin" element={<Navigate to="/login" replace />} />
+        <Route path="/login/employee" element={<Navigate to="/login" replace />} />
+        <Route path="/register" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
@@ -141,6 +148,8 @@ function MainLayout() {
             <Route path="/admin/employees/add" element={<AdminRoute><AddEmployee /></AdminRoute>} />
             <Route path="/admin/employees/:id" element={<AdminRoute><ViewEmployees /></AdminRoute>} />
             <Route path="/admin/employees/:id/edit" element={<AdminRoute><EditEmployee /></AdminRoute>} />
+            <Route path="/admin/barcode-attendance" element={<AdminRoute><BarcodeAttendance /></AdminRoute>} />
+            <Route path="/admin/barcode-cards" element={<AdminRoute><AdminBarcodeCards /></AdminRoute>} />
             <Route path="/admin/attendance" element={<AdminRoute><Attendance /></AdminRoute>} />
             <Route path="/admin/leaves" element={<AdminRoute><AdminLeaves /></AdminRoute>} />
             <Route path="/admin/tasks" element={<AdminRoute><Tasks /></AdminRoute>} />
@@ -149,6 +158,7 @@ function MainLayout() {
             {/* Employee Panel Protected Routes */}
             <Route path="/employee/dashboard" element={<EmployeeRoute><EmployeeDashboard /></EmployeeRoute>} />
             <Route path="/employee/profile" element={<EmployeeRoute><EmployeeProfile /></EmployeeRoute>} />
+            <Route path="/employee/barcode-attendance" element={<EmployeeRoute><BarcodeAttendance /></EmployeeRoute>} />
             <Route path="/employee/attendance" element={<EmployeeRoute><EmployeeAttendance /></EmployeeRoute>} />
             <Route path="/employee/leaves" element={<EmployeeRoute><EmployeeLeaves /></EmployeeRoute>} />
             <Route path="/employee/tasks" element={<EmployeeRoute><EmployeeTasks /></EmployeeRoute>} />

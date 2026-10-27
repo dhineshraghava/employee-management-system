@@ -40,6 +40,22 @@ api.interceptors.response.use(
 // ==========================================
 // Authentication APIs
 // ==========================================
+export const unifiedLogin = (credentials) => {
+  return api.post('/auth/login', credentials);
+};
+
+export const registerUser = (userData) => {
+  return api.post('/auth/register', userData);
+};
+
+export const forgotPasswordRequest = (email) => {
+  return api.post('/auth/forgot-password', { email });
+};
+
+export const resetPasswordSubmit = (resetData) => {
+  return api.post('/auth/reset-password', resetData);
+};
+
 export const adminLogin = (credentials) => {
   return api.post('/auth/admin/login', credentials);
 };
@@ -157,6 +173,14 @@ export const deleteAttendance = (id) => {
 
 export const getTodayAttendanceSummary = () => {
   return api.get('/attendance/summary/today');
+};
+
+export const scanBarcodeAttendance = (scanData) => {
+  return api.post('/attendance/scan', scanData);
+};
+
+export const getEmployeeBarcodeCard = (employeeId) => {
+  return api.get(`/attendance/barcode/card/${employeeId}`);
 };
 
 export const getTasks = (params = {}) => {

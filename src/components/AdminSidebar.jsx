@@ -12,6 +12,8 @@ import {
   Database,
   X,
   ShieldCheck,
+  Camera,
+  CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getLeaveSummary } from '../services/api';
@@ -43,7 +45,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login/admin');
+    navigate('/login');
   };
 
   return (
@@ -111,7 +113,27 @@ export default function AdminSidebar({ isOpen, onClose }) {
             <span className="link-text">Register Employee</span>
           </NavLink>
 
-          <div className="nav-section-title">WORKFORCE OPERATIONS</div>
+          <div className="nav-section-title">BARCODE & ATTENDANCE</div>
+
+          <NavLink
+            to="/admin/barcode-attendance"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-admin-barcode-attendance"
+          >
+            <Camera size={20} className="link-icon text-cyan" />
+            <span className="link-text">Barcode Scanner</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/barcode-cards"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-admin-barcode-cards"
+          >
+            <CreditCard size={20} className="link-icon" />
+            <span className="link-text">Employee ID Badges</span>
+          </NavLink>
 
           <NavLink
             to="/admin/attendance"
@@ -120,7 +142,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
             id="nav-admin-attendance"
           >
             <CalendarCheck size={20} className="link-icon" />
-            <span className="link-text">Attendance Management</span>
+            <span className="link-text">Attendance Records</span>
           </NavLink>
 
           <NavLink

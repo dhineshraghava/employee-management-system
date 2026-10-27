@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Briefcase,
   KeyRound,
+  QrCode,
 } from 'lucide-react';
 
 export default function EmployeeTable({
@@ -20,6 +21,7 @@ export default function EmployeeTable({
   onDeleteRequest,
   onViewDetails,
   onResetPassword,
+  onViewBarcodeCard,
   searchTerm,
 }) {
   const navigate = useNavigate();
@@ -138,6 +140,17 @@ export default function EmployeeTable({
                 </td>
                 <td className="td-actions text-center">
                   <div className="action-buttons-group">
+                    <button
+                      className="action-btn badge-btn"
+                      onClick={() => onViewBarcodeCard && onViewBarcodeCard(emp)}
+                      title={`View Code 128 Barcode ID Card for ${emp.name}`}
+                      aria-label={`Barcode Card ${emp.name}`}
+                      id={`btn-barcode-${emp.id}`}
+                    >
+                      <QrCode size={16} />
+                      <span className="btn-label">Badge</span>
+                    </button>
+
                     <button
                       className="action-btn view-btn"
                       onClick={() => onViewDetails && onViewDetails(emp)}

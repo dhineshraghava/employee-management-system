@@ -76,6 +76,14 @@ export async function initializeDatabase() {
       console.log("ℹ️ [MySQL] Added 'is_active' column to 'employees'");
     }
 
+    if (!existingEmpFields.includes('barcode')) {
+      await connection.query('ALTER TABLE employees ADD COLUMN barcode VARCHAR(50) UNIQUE NULL AFTER designation');
+      console.log("ℹ️ [MySQL] Added 'barcode' column to 'employees'");
+    }
+
+    // Automatically backfill Code 128 barcode format: EMP-<id> for all employees
+    await connection.query("UPDATE employees SET barcode = CONCAT('EMP-', id) WHERE barcode IS NULL OR barcode = ''");
+
     // Set default password for any employees currently without password
     const defaultEmpPasswordHash = await bcrypt.hash('employee123', 10);
     await connection.query('UPDATE employees SET password = ? WHERE password IS NULL OR password = ""', [defaultEmpPasswordHash]);
@@ -118,6 +126,13 @@ export async function initializeDatabase() {
         CONSTRAINT fk_attendance_employee FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
     `);
+
+    const [attCols] = await connection.query('SHOW COLUMNS FROM attendance');
+    const existingAttFields = attCols.map((c) => c.Field.toLowerCase());
+    if (!existingAttFields.includes('barcode_scanned')) {
+      await connection.query('ALTER TABLE attendance ADD COLUMN barcode_scanned TINYINT(1) DEFAULT 0');
+      console.log("ℹ️ [MySQL] Added 'barcode_scanned' column to 'attendance'");
+    }
 
     // 4. Tasks Table
     await connection.query(`

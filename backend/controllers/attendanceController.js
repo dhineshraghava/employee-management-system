@@ -352,3 +352,230 @@ export async function getTodaySummary(req, res) {
     });
   }
 }
+
+/**
+ * POST /api/attendance/scan
+ * Record Attendance via Code 128 Barcode Scan (Webcam or Scanner)
+ * State machine:
+ * - 1st scan of day -> Check-In
+ * - 2nd scan of day -> Check-Out & calculate elapsed work hours
+ * - Subsequent scans -> Reject with clear conflict error
+ */
+export async function recordBarcodeAttendance(req, res) {
+  try {
+    const { barcode, rawValue, mode = 'auto', notes } = req.body;
+    const scanInput = (barcode || rawValue || '').toString().trim();
+
+    if (!scanInput) {
+      return res.status(400).json({
+        success: false,
+        message: 'Barcode value is required.',
+      });
+    }
+
+    // Extract numerical ID or match exact barcode string
+    let empQuery = 'SELECT id, name, email, department, designation, barcode, is_active FROM employees WHERE barcode = ?';
+    let empParams = [scanInput];
+
+    // If formatted like EMP-15, also check by numeric id
+    if (/^EMP-\d+$/i.test(scanInput)) {
+      const numericId = parseInt(scanInput.replace(/^EMP-/i, ''), 10);
+      empQuery += ' OR id = ?';
+      empParams.push(numericId);
+    } else if (/^\d+$/.test(scanInput)) {
+      empQuery += ' OR id = ?';
+      empParams.push(parseInt(scanInput, 10));
+    }
+
+    const [empRows] = await pool.query(empQuery, empParams);
+
+    if (empRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Employee not found. Please scan a valid employee barcode (Scanned: "${scanInput}").`,
+      });
+    }
+
+    const employee = empRows[0];
+
+    // Check if employee account is active
+    if (employee.is_active === 0) {
+      return res.status(403).json({
+        success: false,
+        message: `Employee "${employee.name}" (#${employee.id}) account is currently deactivated. Attendance cannot be recorded.`,
+      });
+    }
+
+    // Standardized barcode representation
+    const employeeBarcode = employee.barcode || `EMP-${employee.id}`;
+
+    // Get today's attendance record for this employee
+    const [existingRows] = await pool.query(
+      `SELECT id, employee_id, DATE_FORMAT(date, '%Y-%m-%d') as date, status, check_in, check_out, 
+              TIMEDIFF(check_out, check_in) as working_duration 
+       FROM attendance 
+       WHERE employee_id = ? AND date = CURDATE()`,
+      [employee.id]
+    );
+
+    const nowTime = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // CASE 1: No attendance marked today -> Record CHECK-IN
+    if (existingRows.length === 0) {
+      if (mode === 'check_out') {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot check out: Employee "${employee.name}" has not checked in today yet.`,
+        });
+      }
+
+      await pool.query(
+        `INSERT INTO attendance (employee_id, date, status, check_in, notes, barcode_scanned) 
+         VALUES (?, CURDATE(), 'Present', CURTIME(), ?, 1)`,
+        [employee.id, notes || 'Code 128 Barcode Scan Check-In']
+      );
+
+      return res.status(200).json({
+        success: true,
+        action: 'check_in',
+        message: `Attendance marked successfully! Check-in recorded for ${employee.name} (${employeeBarcode}).`,
+        employee: {
+          id: employee.id,
+          name: employee.name,
+          email: employee.email,
+          department: employee.department,
+          designation: employee.designation,
+          barcode: employeeBarcode,
+        },
+        attendance: {
+          date: todayStr,
+          status: 'Present',
+          check_in: nowTime,
+          check_out: null,
+          barcode_scanned: 1,
+        },
+      });
+    }
+
+    const existingAtt = existingRows[0];
+
+    // CASE 2: Checked in, but NOT checked out yet -> Record CHECK-OUT
+    if (existingAtt.check_in && !existingAtt.check_out) {
+      if (mode === 'check_in') {
+        return res.status(409).json({
+          success: false,
+          message: `Attendance already checked in today at ${existingAtt.check_in} for "${employee.name}".`,
+        });
+      }
+
+      await pool.query(
+        `UPDATE attendance 
+         SET check_out = CURTIME(), 
+             notes = CONCAT(IFNULL(notes, ''), ' | Barcode Check-Out') 
+         WHERE id = ?`,
+        [existingAtt.id]
+      );
+
+      // Retrieve updated record with working duration
+      const [updatedRows] = await pool.query(
+        `SELECT id, employee_id, DATE_FORMAT(date, '%Y-%m-%d') as date, status, check_in, check_out,
+                TIMEDIFF(check_out, check_in) as working_duration,
+                ROUND(TIME_TO_SEC(TIMEDIFF(check_out, check_in)) / 3600, 2) as working_hours
+         FROM attendance 
+         WHERE id = ?`,
+        [existingAtt.id]
+      );
+
+      const updated = updatedRows[0];
+
+      return res.status(200).json({
+        success: true,
+        action: 'check_out',
+        message: `Check-out recorded successfully for ${employee.name}! Work duration: ${updated.working_duration || 'Calculated'}.`,
+        employee: {
+          id: employee.id,
+          name: employee.name,
+          email: employee.email,
+          department: employee.department,
+          designation: employee.designation,
+          barcode: employeeBarcode,
+        },
+        attendance: {
+          date: todayStr,
+          status: updated.status,
+          check_in: updated.check_in,
+          check_out: updated.check_out,
+          working_duration: updated.working_duration,
+          working_hours: updated.working_hours,
+        },
+      });
+    }
+
+    // CASE 3: Both check-in and check-out already completed today -> Reject duplicate
+    return res.status(409).json({
+      success: false,
+      message: `Attendance already marked today for ${employee.name}. Check-in (${existingAtt.check_in}) and check-out (${existingAtt.check_out}) are already finalized.`,
+      employee: {
+        id: employee.id,
+        name: employee.name,
+        barcode: employeeBarcode,
+      },
+    });
+  } catch (error) {
+    console.error('Barcode attendance scan error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to process barcode attendance.',
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * GET /api/attendance/barcode/card/:id
+ * Retrieve specific employee details for rendering or printing their barcode ID card
+ */
+export async function getEmployeeBarcodeCard(req, res) {
+  try {
+    const { id } = req.params;
+    const empId = parseInt(id, 10);
+
+    if (isNaN(empId)) {
+      return res.status(400).json({ success: false, message: 'Invalid employee ID.' });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT id, name, email, phone, department, designation, salary, is_active, barcode FROM employees WHERE id = ?',
+      [empId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Employee not found.' });
+    }
+
+    const emp = rows[0];
+    const barcodeValue = emp.barcode || `EMP-${emp.id}`;
+
+    return res.status(200).json({
+      success: true,
+      card: {
+        id: emp.id,
+        name: emp.name,
+        email: emp.email,
+        phone: emp.phone,
+        department: emp.department || 'General',
+        designation: emp.designation || 'Staff Member',
+        barcode: barcodeValue,
+        is_active: emp.is_active,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching employee barcode card:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch employee card data.',
+      error: error.message,
+    });
+  }
+}

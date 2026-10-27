@@ -48,17 +48,14 @@ export default function EmployeeLeaves() {
   const [cancelTarget, setCancelTarget] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // Form State
-  const defaultDates = useMemo(() => {
+  const [formData, setFormData] = useState(() => {
     const today = new Date().toISOString().split('T')[0];
-    return { start: today, end: today };
-  }, []);
-
-  const [formData, setFormData] = useState({
-    leave_type: 'Casual Leave',
-    start_date: defaultDates.start,
-    end_date: defaultDates.end,
-    reason: '',
+    return {
+      leave_type: 'Casual Leave',
+      start_date: today,
+      end_date: today,
+      reason: '',
+    };
   });
 
   const showToast = (type, text) => {

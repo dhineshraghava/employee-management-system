@@ -11,6 +11,7 @@ import {
   X,
   Building2,
   Briefcase,
+  Camera,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,7 +21,7 @@ export default function EmployeeSidebar({ isOpen, onClose }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login/employee');
+    navigate('/login');
   };
 
   const getInitials = (name) => {
@@ -84,7 +85,17 @@ export default function EmployeeSidebar({ isOpen, onClose }) {
             id="nav-emp-profile"
           >
             <User size={20} className="link-icon" />
-            <span className="link-text">My Profile</span>
+            <span className="link-text">Profile & ID Card</span>
+          </NavLink>
+
+          <NavLink
+            to="/employee/barcode-attendance"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-emp-barcode-scanner"
+          >
+            <Camera size={20} className="link-icon text-cyan" />
+            <span className="link-text">Barcode Scanner</span>
           </NavLink>
 
           <NavLink

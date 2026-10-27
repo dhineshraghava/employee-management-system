@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getEmployeeProfile } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import EmployeeBarcodeCard from '../../components/EmployeeBarcodeCard';
 
 function formatSalary(val) {
   const num = parseFloat(val);
@@ -155,6 +156,19 @@ export default function EmployeeProfile() {
               <p className="field-box-value text-success">
                 {profile?.is_active === 1 ? 'Active & Verified' : 'Deactivated'}
               </p>
+            </div>
+          </div>
+
+          {/* Official Barcode ID Badge Card */}
+          <div className="profile-barcode-card-section">
+            <div className="section-title-row">
+              <h3 className="section-subtitle">Official Code 128 Workforce ID Card</h3>
+              <p className="section-desc">
+                Present this digital badge or printed card to the attendance scanner for daily check-in and check-out.
+              </p>
+            </div>
+            <div className="profile-card-display">
+              <EmployeeBarcodeCard employee={profile || user} isModal={false} />
             </div>
           </div>
         </div>

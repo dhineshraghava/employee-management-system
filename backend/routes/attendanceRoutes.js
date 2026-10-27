@@ -6,20 +6,26 @@ import {
   updateAttendance,
   deleteAttendance,
   getTodaySummary,
+  recordBarcodeAttendance,
+  getEmployeeBarcodeCard,
 } from '../controllers/attendanceController.js';
 import { employeeCheckIn, employeeCheckOut } from '../controllers/employeePortalController.js';
-import { authenticateToken, requireEmployee, requireAdmin } from '../middleware/auth.js';
+import { authenticateToken, requireEmployee } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public/Admin or Authenticated
+// Barcode Scanning Attendance & Card Endpoints
+router.post('/scan', recordBarcodeAttendance);
+router.get('/barcode/card/:id', getEmployeeBarcodeCard);
+
+// Summary & Status
 router.get('/summary/today', getTodaySummary);
 
-// Employee check-in and check-out routes
+// Employee Portal Check-In/Check-Out
 router.post('/check-in', authenticateToken, requireEmployee, employeeCheckIn);
 router.post('/check-out', authenticateToken, requireEmployee, employeeCheckOut);
 
-// General attendance endpoints
+// Standard CRUD Attendance endpoints
 router.get('/', getAllAttendance);
 router.get('/:id', getAttendanceById);
 router.post('/', createAttendance);

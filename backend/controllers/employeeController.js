@@ -10,7 +10,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function getAllEmployees(req, res) {
   try {
     const { search } = req.query;
-    let query = 'SELECT id, name, email, phone, department, designation, salary, is_active, role FROM employees';
+    let query = 'SELECT id, name, email, phone, department, designation, salary, is_active, role, IFNULL(barcode, CONCAT(\'EMP-\', id)) as barcode FROM employees';
     let params = [];
 
     if (search && search.trim() !== '') {
@@ -57,7 +57,7 @@ export async function getEmployeeById(req, res) {
     }
 
     const [rows] = await pool.query(
-      'SELECT id, name, email, phone, department, designation, salary, is_active, role FROM employees WHERE id = ?',
+      'SELECT id, name, email, phone, department, designation, salary, is_active, role, IFNULL(barcode, CONCAT(\'EMP-\', id)) as barcode FROM employees WHERE id = ?',
       [employeeId]
     );
 
@@ -99,7 +99,7 @@ export async function getEmployeeById(req, res) {
 
 /**
  * POST /api/employees & /api/admin/employees
- * Add a new employee to MySQL with secure login credentials
+ * Add a new employee to MySQL with secure login credentials and automatic Code 128 barcode
  */
 export async function createEmployee(req, res) {
   try {
@@ -151,14 +151,20 @@ export async function createEmployee(req, res) {
       cleanSalary,
     ]);
 
+    const newEmpId = result.insertId;
+    const generatedBarcode = `EMP-${newEmpId}`;
+
+    // Automatically set unique Code 128 barcode for employee
+    await pool.query('UPDATE employees SET barcode = ? WHERE id = ?', [generatedBarcode, newEmpId]);
+
     const [newRows] = await pool.query(
-      'SELECT id, name, email, phone, department, designation, salary, role, is_active FROM employees WHERE id = ?',
-      [result.insertId]
+      'SELECT id, name, email, phone, department, designation, salary, role, is_active, barcode FROM employees WHERE id = ?',
+      [newEmpId]
     );
 
     return res.status(201).json({
       success: true,
-      message: `Employee "${cleanName}" created successfully with initial password.`,
+      message: `Employee "${cleanName}" created successfully with barcode ${generatedBarcode}.`,
       initialPassword: rawPassword,
       data: newRows[0],
     });
@@ -239,7 +245,7 @@ export async function updateEmployee(req, res) {
     ]);
 
     const [updatedRows] = await pool.query(
-      'SELECT id, name, email, phone, department, designation, salary, role, is_active FROM employees WHERE id = ?',
+      'SELECT id, name, email, phone, department, designation, salary, role, is_active, IFNULL(barcode, CONCAT(\'EMP-\', id)) as barcode FROM employees WHERE id = ?',
       [employeeId]
     );
 
