@@ -179,6 +179,44 @@ export const deleteTask = (id) => {
   return api.delete(`/tasks/${id}`);
 };
 
+// ==========================================
+// Leave Management APIs (Employee & Admin)
+// ==========================================
+export const applyLeave = (leaveData) => {
+  return api.post('/leaves/apply', leaveData);
+};
+
+export const getMyLeaves = () => {
+  return api.get('/leaves/my');
+};
+
+export const cancelMyLeave = (id) => {
+  return api.patch(`/leaves/my/${id}/cancel`);
+};
+
+export const getAdminLeaves = (params = {}) => {
+  return api.get('/leaves', { params });
+};
+
+export const updateLeaveStatus = (id, status, admin_remarks = '') => {
+  return api.patch(`/leaves/${id}/status`, { status, admin_remarks });
+};
+
+export const deleteLeave = (id) => {
+  return api.delete(`/leaves/${id}`);
+};
+
+export const getLeaveSummary = () => {
+  return api.get('/leaves/summary');
+};
+
+// ==========================================
+// AI Workforce Intelligence APIs
+// ==========================================
+export const getAIInsights = () => {
+  return api.get('/ai/insights');
+};
+
 // Legacy / General access methods
 export const getEmployees = (search = '') => getAdminEmployees(search);
 export const getEmployeeById = (id) => getAdminEmployeeById(id);

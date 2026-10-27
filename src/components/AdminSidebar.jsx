@@ -5,19 +5,41 @@ import {
   Users,
   UserPlus,
   CalendarCheck,
+  CalendarOff,
   CheckSquare,
   BarChart3,
   LogOut,
   Database,
   X,
-  Building2,
   ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getLeaveSummary } from '../services/api';
 
 export default function AdminSidebar({ isOpen, onClose }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const [pendingLeavesCount, setPendingLeavesCount] = React.useState(0);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchLeaves = async () => {
+      try {
+        const res = await getLeaveSummary();
+        if (isMounted && res.data?.summary?.pending) {
+          setPendingLeavesCount(res.data.summary.pending);
+        }
+      } catch {
+        // silent fallback
+      }
+    };
+    fetchLeaves();
+    const interval = setInterval(fetchLeaves, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -99,6 +121,21 @@ export default function AdminSidebar({ isOpen, onClose }) {
           >
             <CalendarCheck size={20} className="link-icon" />
             <span className="link-text">Attendance Management</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/leaves"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-admin-leaves"
+          >
+            <CalendarOff size={20} className="link-icon" />
+            <span className="link-text">Leave Requests</span>
+            {pendingLeavesCount > 0 && (
+              <span className="sidebar-badge-count" title={`${pendingLeavesCount} pending leave applications`}>
+                {pendingLeavesCount}
+              </span>
+            )}
           </NavLink>
 
           <NavLink

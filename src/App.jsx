@@ -14,12 +14,14 @@ import EditEmployee from './pages/EditEmployee';
 import Attendance from './pages/Attendance';
 import Tasks from './pages/Tasks';
 import AdminReports from './pages/admin/AdminReports';
+import AdminLeaves from './pages/admin/AdminLeaves';
 
 // Employee Portal Pages
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
 import EmployeeProfile from './pages/employee/EmployeeProfile';
 import EmployeeAttendance from './pages/employee/EmployeeAttendance';
 import EmployeeTasks from './pages/employee/EmployeeTasks';
+import EmployeeLeaves from './pages/employee/EmployeeLeaves';
 
 import { checkHealth } from './services/api';
 import './App.css';
@@ -68,12 +70,14 @@ function MainLayout() {
     if (p.includes('/admin/employees/') && p.includes('/edit')) return 'admin-edit';
     if (p.includes('/admin/employees')) return 'admin-employees';
     if (p.includes('/admin/attendance')) return 'admin-attendance';
+    if (p.includes('/admin/leaves')) return 'admin-leaves';
     if (p.includes('/admin/tasks')) return 'admin-tasks';
     if (p.includes('/admin/reports')) return 'admin-reports';
 
     if (p.includes('/employee/dashboard')) return 'employee-dashboard';
     if (p.includes('/employee/profile')) return 'employee-profile';
     if (p.includes('/employee/attendance')) return 'employee-attendance';
+    if (p.includes('/employee/leaves')) return 'employee-leaves';
     if (p.includes('/employee/tasks')) return 'employee-tasks';
 
     return 'dashboard';
@@ -138,6 +142,7 @@ function MainLayout() {
             <Route path="/admin/employees/:id" element={<AdminRoute><ViewEmployees /></AdminRoute>} />
             <Route path="/admin/employees/:id/edit" element={<AdminRoute><EditEmployee /></AdminRoute>} />
             <Route path="/admin/attendance" element={<AdminRoute><Attendance /></AdminRoute>} />
+            <Route path="/admin/leaves" element={<AdminRoute><AdminLeaves /></AdminRoute>} />
             <Route path="/admin/tasks" element={<AdminRoute><Tasks /></AdminRoute>} />
             <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
 
@@ -145,6 +150,7 @@ function MainLayout() {
             <Route path="/employee/dashboard" element={<EmployeeRoute><EmployeeDashboard /></EmployeeRoute>} />
             <Route path="/employee/profile" element={<EmployeeRoute><EmployeeProfile /></EmployeeRoute>} />
             <Route path="/employee/attendance" element={<EmployeeRoute><EmployeeAttendance /></EmployeeRoute>} />
+            <Route path="/employee/leaves" element={<EmployeeRoute><EmployeeLeaves /></EmployeeRoute>} />
             <Route path="/employee/tasks" element={<EmployeeRoute><EmployeeTasks /></EmployeeRoute>} />
 
             {/* Legacy URL Redirects */}
@@ -152,6 +158,7 @@ function MainLayout() {
             <Route path="/add" element={<Navigate to="/admin/employees/add" replace />} />
             <Route path="/edit/:id" element={<Navigate to="/admin/employees/:id/edit" replace />} />
             <Route path="/attendance" element={<Navigate to="/admin/attendance" replace />} />
+            <Route path="/leaves" element={<Navigate to="/admin/leaves" replace />} />
             <Route path="/tasks" element={<Navigate to="/admin/tasks" replace />} />
 
             {/* Catch-All */}

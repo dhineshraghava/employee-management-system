@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Database,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,6 +23,7 @@ export default function Login() {
   // Determine active panel based on URL path or state
   const isEmployeePath = location.pathname.includes('/employee');
   const [activeTab, setActiveTab] = useState(isEmployeePath ? 'employee' : 'admin');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -94,8 +97,13 @@ export default function Login() {
             <Building2 size={32} color="#ffffff" />
           </div>
           <h1 className="login-brand-title">StaffPulse EMS</h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: '6px 0 2px' }}>
+            <span className="badge-pill admin-pill" style={{ fontSize: '0.74rem', padding: '2px 10px', background: 'rgba(99, 102, 241, 0.15)', color: '#4338ca', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+              <Sparkles size={12} /> AI-Powered Workforce OS
+            </span>
+          </div>
           <p className="login-brand-tagline">
-            Enterprise Employee Management & Workforce Portal
+            Enterprise Employee Management & AI Workforce Intelligence
           </p>
         </div>
 
@@ -168,12 +176,13 @@ export default function Login() {
               <label htmlFor="login-password" className="form-label">
                 Password
               </label>
-              <div className="input-with-icon">
+              <div className="input-with-icon" style={{ position: 'relative' }}>
                 <Lock size={18} className="field-icon" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   id="login-password"
                   className="form-input"
+                  style={{ paddingRight: '42px' }}
                   placeholder="Enter your account password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -181,6 +190,27 @@ export default function Login() {
                   autoComplete="current-password"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0,
+                  }}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 

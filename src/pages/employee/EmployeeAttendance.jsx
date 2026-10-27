@@ -286,6 +286,7 @@ export default function EmployeeAttendance() {
                   <th>Status</th>
                   <th>Check-In Time</th>
                   <th>Check-Out Time</th>
+                  <th>Duration</th>
                   <th>Notes</th>
                 </tr>
               </thead>
@@ -308,6 +309,15 @@ export default function EmployeeAttendance() {
                     </td>
                     <td>
                       <span className="text-secondary">{rec.check_out || '—'}</span>
+                    </td>
+                    <td>
+                      {rec.working_duration ? (
+                        <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600 }}>
+                          {rec.working_duration}
+                        </span>
+                      ) : (
+                        <span className="text-muted text-xs">—</span>
+                      )}
                     </td>
                     <td>
                       <span className="text-secondary text-sm">{rec.notes || '—'}</span>

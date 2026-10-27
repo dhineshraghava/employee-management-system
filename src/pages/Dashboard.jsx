@@ -15,9 +15,11 @@ import {
   UserCheck,
   UserX,
   AlertTriangle,
+  CalendarOff,
 } from 'lucide-react';
 import { getDashboardStats } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import AIWorkforceInsights from '../components/AIWorkforceInsights';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -191,6 +193,54 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Pending Leave Review Alert Banner if any leaves are pending */}
+      {stats.pendingLeaves > 0 && (
+        <div
+          className="leave-alert-banner flex-between mb-4"
+          style={{
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: '12px',
+            padding: '14px 20px',
+            boxShadow: '0 2px 8px rgba(217, 119, 6, 0.1)',
+          }}
+        >
+          <div className="flex-align-center gap-12">
+            <div
+              style={{
+                background: '#fef3c7',
+                padding: '10px',
+                borderRadius: '50%',
+                color: '#d97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <CalendarOff size={22} />
+            </div>
+            <div>
+              <strong style={{ color: '#92400e', fontSize: '0.98rem' }}>
+                {stats.pendingLeaves} Employee Leave Application{stats.pendingLeaves > 1 ? 's' : ''} Awaiting Approval
+              </strong>
+              <p style={{ color: '#b45309', fontSize: '0.85rem', margin: 0 }}>
+                Employees have applied for time off. Review, approve, or reject these requests to automatically sync attendance.
+              </p>
+            </div>
+          </div>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => navigate('/admin/leaves')}
+            id="btn-dash-review-leaves"
+          >
+            Review Requests <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* AI Workforce Intelligence Section */}
+      <AIWorkforceInsights onActionClick={(tab) => navigate(tab === 'leaves' ? '/admin/leaves' : '/admin/tasks')} />
+
       {/* Primary KPI Metric Cards Row */}
       <div className="stats-cards-grid">
         {/* Card 1: Total Employees */}
@@ -239,7 +289,28 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Card 4: Tasks Pending & In Progress */}
+        {/* Card 4: Leave Requests */}
+        <div
+          className={`stat-card stat-amber cursor-pointer ${
+            stats.pendingLeaves > 0 ? 'border-amber' : ''
+          }`}
+          onClick={() => navigate('/admin/leaves')}
+        >
+          <div className="stat-card-icon-box">
+            <CalendarOff size={24} />
+          </div>
+          <div className="stat-card-content">
+            <span className="stat-card-label">Pending Leaves</span>
+            <h2 className="stat-card-value text-amber-700">
+              {loading ? '...' : stats.pendingLeaves || 0}
+            </h2>
+            <span className="stat-card-meta">
+              {stats.totalLeaves ? `${stats.totalLeaves} total applied` : 'Click to review'}
+            </span>
+          </div>
+        </div>
+
+        {/* Card 5: Tasks Pending & In Progress */}
         <div className="stat-card stat-purple cursor-pointer" onClick={() => navigate('/tasks')}>
           <div className="stat-card-icon-box">
             <CheckSquare size={24} />

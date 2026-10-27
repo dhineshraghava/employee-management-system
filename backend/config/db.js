@@ -134,7 +134,25 @@ export async function initializeDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
     `);
 
-    // 5. Employee view for compatibility
+    // 5. Leaves Table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS leaves (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        employee_id INT NOT NULL,
+        leave_type ENUM('Casual Leave', 'Sick Leave', 'Paid Leave', 'Emergency Leave', 'Unpaid Leave') NOT NULL DEFAULT 'Casual Leave',
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        days INT NOT NULL DEFAULT 1,
+        reason TEXT NOT NULL,
+        status ENUM('Pending', 'Approved', 'Rejected', 'Cancelled') NOT NULL DEFAULT 'Pending',
+        admin_remarks VARCHAR(255) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        CONSTRAINT fk_leaves_employee FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    `);
+
+    // 6. Employee view for compatibility
     await connection.query(`
       CREATE OR REPLACE VIEW employee AS SELECT * FROM employees;
     `);

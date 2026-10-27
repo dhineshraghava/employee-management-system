@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   User,
   CalendarCheck,
+  CalendarOff,
   CheckSquare,
   LogOut,
   Database,
@@ -94,6 +95,16 @@ export default function EmployeeSidebar({ isOpen, onClose }) {
           >
             <CalendarCheck size={20} className="link-icon" />
             <span className="link-text">Mark Attendance</span>
+          </NavLink>
+
+          <NavLink
+            to="/employee/leaves"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-emp-leaves"
+          >
+            <CalendarOff size={20} className="link-icon" />
+            <span className="link-text">Apply Leave</span>
           </NavLink>
 
           <NavLink

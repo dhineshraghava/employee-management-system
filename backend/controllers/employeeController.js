@@ -442,6 +442,25 @@ export async function getDashboardStats(req, res) {
       LIMIT 5
     `);
 
+    const [leaveStatsRows] = await pool.query(`
+      SELECT 
+        COALESCE(SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END), 0) as pendingLeaves,
+        COALESCE(SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END), 0) as approvedLeaves,
+        COUNT(*) as totalLeaves
+      FROM leaves
+    `);
+    const pendingLeaves = Number(leaveStatsRows[0]?.pendingLeaves || 0);
+    const approvedLeaves = Number(leaveStatsRows[0]?.approvedLeaves || 0);
+    const totalLeaves = Number(leaveStatsRows[0]?.totalLeaves || 0);
+
+    const [recentLeaves] = await pool.query(`
+      SELECT l.*, e.name as employee_name, e.department as employee_department
+      FROM leaves l
+      JOIN employees e ON l.employee_id = e.id
+      ORDER BY l.id DESC
+      LIMIT 5
+    `);
+
     const statsData = {
       totalEmployees,
       activeDepartments,
@@ -456,6 +475,9 @@ export async function getDashboardStats(req, res) {
       completedTasks,
       overdueTasks,
       totalTasks,
+      pendingLeaves,
+      approvedLeaves,
+      totalLeaves,
       departments: deptRows.map((d) => ({
         name: d.name,
         count: Number(d.count),
@@ -465,6 +487,7 @@ export async function getDashboardStats(req, res) {
       recentEmployees,
       recentAttendance,
       recentTasks,
+      recentLeaves,
     };
 
     return res.status(200).json({

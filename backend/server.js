@@ -11,6 +11,8 @@ import employeePortalRoutes from './routes/employeePortalRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import leaveRoutes from './routes/leaveRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 import { getDashboardStats } from './controllers/employeeController.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,6 +75,8 @@ app.use('/api/employee', employeePortalRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/ai', aiRoutes);
 app.get('/api/dashboard/stats', getDashboardStats);
 
 // 404 handler

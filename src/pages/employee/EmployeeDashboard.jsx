@@ -12,6 +12,7 @@ import {
   AlertCircle,
   ArrowRight,
   Briefcase,
+  CalendarOff,
 } from 'lucide-react';
 import {
   getEmployeeDashboardStats,
@@ -186,6 +187,16 @@ export default function EmployeeDashboard() {
             <LogOut size={18} />
             <span>{isCheckedOut ? `Checked Out (${todayAtt.check_out})` : checkingOut ? 'Recording...' : 'Check Out Now'}</span>
           </button>
+
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => navigate('/employee/leaves')}
+            id="btn-emp-apply-leave-dash"
+          >
+            <CalendarOff size={18} />
+            <span>Apply Leave</span>
+          </button>
         </div>
       </div>
 
@@ -200,8 +211,21 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* Tasks Overview Cards */}
+      {/* Overview Cards */}
       <div className="stats-cards-grid">
+        <div className="stat-card stat-teal cursor-pointer" onClick={() => navigate('/employee/leaves')}>
+          <div className="stat-card-icon-box">
+            <CalendarOff size={24} />
+          </div>
+          <div className="stat-card-content">
+            <span className="stat-card-label">My Leaves</span>
+            <h2 className="stat-card-value">{loading ? '...' : data.approvedLeaves || 0}</h2>
+            <span className="stat-card-meta">
+              {data.pendingLeaves ? `${data.pendingLeaves} pending approval` : 'Click to apply'}
+            </span>
+          </div>
+        </div>
+
         <div className="stat-card stat-blue cursor-pointer" onClick={() => navigate('/employee/tasks')}>
           <div className="stat-card-icon-box">
             <CheckSquare size={24} />

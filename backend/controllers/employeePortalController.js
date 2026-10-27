@@ -40,6 +40,8 @@ export async function getMyAttendance(req, res) {
         status,
         check_in,
         check_out,
+        TIMEDIFF(check_out, check_in) as working_duration,
+        ROUND(TIME_TO_SEC(TIMEDIFF(check_out, check_in)) / 3600, 1) as working_hours,
         notes,
         created_at
       FROM attendance
@@ -221,6 +223,26 @@ export async function getMyDashboardStats(req, res) {
       LIMIT 5
     `, [employeeId]);
 
+    // 6. Leave stats for this employee
+    const [leaveStatsRows] = await pool.query(`
+      SELECT 
+        COUNT(*) as totalLeaves,
+        COALESCE(SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END), 0) as pendingLeaves,
+        COALESCE(SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END), 0) as approvedLeaves,
+        COALESCE(SUM(CASE WHEN status = 'Approved' THEN days ELSE 0 END), 0) as approvedLeaveDays
+      FROM leaves
+      WHERE employee_id = ?
+    `, [employeeId]);
+    const leaveStats = leaveStatsRows[0] || {};
+
+    const [recentLeaves] = await pool.query(`
+      SELECT id, leave_type, DATE_FORMAT(start_date, '%Y-%m-%d') as start_date, DATE_FORMAT(end_date, '%Y-%m-%d') as end_date, days, status, reason, admin_remarks, DATE_FORMAT(created_at, '%Y-%m-%d') as created_at
+      FROM leaves
+      WHERE employee_id = ?
+      ORDER BY id DESC
+      LIMIT 4
+    `, [employeeId]);
+
     return res.status(200).json({
       success: true,
       profile,
@@ -230,8 +252,13 @@ export async function getMyDashboardStats(req, res) {
       inProgressTasks: Number(taskStats.inProgressTasks || 0),
       completedTasks: Number(taskStats.completedTasks || 0),
       overdueTasks: Number(taskStats.overdueTasks || 0),
+      totalLeaves: Number(leaveStats.totalLeaves || 0),
+      pendingLeaves: Number(leaveStats.pendingLeaves || 0),
+      approvedLeaves: Number(leaveStats.approvedLeaves || 0),
+      approvedLeaveDays: Number(leaveStats.approvedLeaveDays || 0),
       recentAttendance,
       recentTasks,
+      recentLeaves,
     });
   } catch (error) {
     console.error('Error fetching employee dashboard stats:', error);
@@ -321,14 +348,23 @@ export async function employeeCheckOut(req, res) {
     await pool.query('UPDATE attendance SET check_out = CURTIME() WHERE id = ?', [existing[0].id]);
 
     const [updated] = await pool.query(`
-      SELECT id, DATE_FORMAT(date, '%Y-%m-%d') as date, status, check_in, check_out
+      SELECT 
+        id, 
+        DATE_FORMAT(date, '%Y-%m-%d') as date, 
+        status, 
+        check_in, 
+        check_out,
+        TIMEDIFF(check_out, check_in) as working_duration,
+        ROUND(TIME_TO_SEC(TIMEDIFF(check_out, check_in)) / 3600, 1) as working_hours
       FROM attendance
       WHERE id = ?
     `, [existing[0].id]);
 
+    const durationStr = updated[0]?.working_duration || 'Calculated';
+
     return res.status(200).json({
       success: true,
-      message: 'Check-out recorded successfully.',
+      message: `Check-out recorded successfully! Total recorded duration: ${durationStr}`,
       data: updated[0],
     });
   } catch (error) {
