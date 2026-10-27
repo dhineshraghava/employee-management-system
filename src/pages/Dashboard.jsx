@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users,
   Building,
-  DollarSign,
   TrendingUp,
   UserPlus,
   ArrowRight,
-  Database,
   RefreshCw,
   Sparkles,
   AlertCircle,
@@ -17,7 +15,6 @@ import {
   UserCheck,
   UserX,
   AlertTriangle,
-  Calendar,
 } from 'lucide-react';
 import { getDashboardStats } from '../services/api';
 import { useAuth } from '../context/AuthContext';

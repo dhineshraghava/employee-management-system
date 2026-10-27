@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   CalendarCheck,
   PlusCircle,
-  Search,
-  Filter,
   RefreshCw,
   X,
   AlertCircle,
@@ -14,7 +12,6 @@ import {
   Calendar,
   UserCheck,
   UserX,
-  AlertTriangle,
 } from 'lucide-react';
 import {
   getAttendance,
@@ -58,14 +55,14 @@ export default function Attendance() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     employee_id: '',
     date: new Date().toISOString().split('T')[0],
     status: 'Present',
     check_in: '',
     check_out: '',
     notes: '',
-  });
+  }));
 
   // Load all attendance records
   const loadAttendance = useCallback(async () => {

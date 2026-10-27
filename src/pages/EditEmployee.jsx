@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit3, ArrowLeft, CheckCircle, AlertCircle, KeyRound, Lock, ShieldCheck } from 'lucide-react';
+import { Edit3, ArrowLeft, CheckCircle, AlertCircle, KeyRound, Lock } from 'lucide-react';
 import EmployeeForm from '../components/EmployeeForm';
 import { getAdminEmployeeById, updateAdminEmployee, resetEmployeePassword } from '../services/api';
 

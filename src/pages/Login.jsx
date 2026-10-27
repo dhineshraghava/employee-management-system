@@ -10,7 +10,6 @@ import {
   AlertCircle,
   Database,
   Sparkles,
-  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -41,12 +40,12 @@ export default function Login() {
 
   // Sync tab with URL if navigated directly
   useEffect(() => {
-    if (location.pathname.endsWith('/employee')) {
+    if (location.pathname.endsWith('/employee') && activeTab !== 'employee') {
       setActiveTab('employee');
-    } else if (location.pathname.endsWith('/admin')) {
+    } else if (location.pathname.endsWith('/admin') && activeTab !== 'admin') {
       setActiveTab('admin');
     }
-  }, [location.pathname]);
+  }, [location.pathname, activeTab]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);

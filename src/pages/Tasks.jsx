@@ -3,7 +3,6 @@ import {
   CheckSquare,
   PlusCircle,
   Search,
-  Filter,
   RefreshCw,
   X,
   AlertCircle,
@@ -13,9 +12,7 @@ import {
   Edit3,
   Calendar,
   AlertTriangle,
-  User,
   Flag,
-  ArrowRight,
 } from 'lucide-react';
 import {
   getTasks,

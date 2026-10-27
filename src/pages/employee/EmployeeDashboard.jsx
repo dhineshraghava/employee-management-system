@@ -8,12 +8,10 @@ import {
   AlertTriangle,
   LogIn,
   LogOut,
-  RefreshCw,
   CheckCircle,
   AlertCircle,
   ArrowRight,
   Briefcase,
-  Calendar,
 } from 'lucide-react';
 import {
   getEmployeeDashboardStats,

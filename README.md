@@ -1,82 +1,78 @@
-# EmpEnroll — Employee Enrollment Management System with SQLite Database
+# Employee Management System — Full-Stack Two-Panel System (Admin & Employee)
 
-A complete, full-stack Employee Enrollment Management System built with React, Vite, Express, and a persistent SQLite database.
-
-## 🌟 Features
-
-- **Full CRUD Operations**:
-  - **Create**: Add new employee with auto-generated ID and validation.
-  - **Read**: Responsive employee table with real-time search, filters (department, type), and profile view modal.
-  - **Update**: Edit existing employee records with validation.
-  - **Delete**: Safe delete dialog with confirmation.
-- **Persistent Database**:
-  - Direct connection to a SQLite database (`employees.sqlite`) powered by Node.js native SQLite engine.
-  - Real-time connection badge on the top navbar (`🟢 SQLite DB Connected`).
-  - Seamless LocalStorage fallback and cache if the server is offline.
-- **Modern Dashboard UI**:
-  - Responsive Sidebar & Topbar with greeting and indicators.
-  - Summary cards: Total Employees, Departments, Full-Time, Contract.
-  - Clean navy blue & modern gradient theme with CSS micro-animations.
+A production-grade, full-stack Employee Management System built with **React 19**, **Vite**, **Express**, **MySQL (emp_db)**, and **JWT Authentication**.
 
 ---
 
-## 🛠️ Project Structure
+## 🌟 Key Features
 
-```
-employee/
-├── employees.sqlite              # Persistent SQLite database file
-├── server/
-│   ├── db.js                     # SQLite database schema, seeder & queries
-│   └── index.js                  # Express REST API (CRUD endpoints)
-├── src/
-│   ├── components/
-│   │   ├── Navbar.jsx            # Top navigation & database status badge
-│   │   ├── Sidebar.jsx           # Responsive sidebar navigation
-│   │   ├── DashboardCards.jsx    # Metric summary cards
-│   │   ├── EmployeeForm.jsx      # Registration & Edit form with validation
-│   │   ├── EmployeeTable.jsx     # Filterable, searchable employee table
-│   │   ├── EmployeeDetails.jsx   # Profile modal
-│   │   ├── ConfirmDelete.jsx     # Delete confirmation modal
-│   │   ├── Toast.jsx             # Action notifications
-│   │   └── Settings.jsx          # Database management & export
-│   ├── utils/
-│   │   └── employeeStorage.js    # API service connecting Frontend to SQLite DB
-│   ├── App.jsx                   # Main React app state & router
-│   ├── main.jsx                  # Application entry point
-│   └── index.css                 # Global styling & design tokens
-├── package.json
-└── vite.config.js
-```
+### 👑 1. Admin Panel
+- **Employee Directory**: Complete CRUD operations (Register new employee, View directory, Edit profiles, Safe Deletion).
+- **Credential Control**: Admin can set and reset employee login passwords anytime.
+- **Attendance Oversight**: View today's summary, mark or correct check-in / check-out times, and filter logs.
+- **Task Management**: Assign work items with priority, deadlines, and tracking.
+- **Executive Analytics**: Real-time KPI summary cards and departmental breakdown.
+
+### 💼 2. Employee Self-Service Portal
+- **Secure Authentication**: Dedicated employee sign-in using registered corporate email & password.
+- **Attendance Punching**: One-click daily Check-In and Check-Out with real-time status display.
+- **Task Tracker**: View assigned deliverables, filter by status, and update task progress (Pending / In Progress / Completed).
+- **Personal Profile**: View designation, department, contact info, and attendance history.
 
 ---
 
-## 🚀 How to Run
+## 🛠️ Technology Stack
 
-### 1. Start the Database Backend Server
-```bash
+- **Frontend**: React 19, Vite, React Router 7, Lucide Icons, Vanilla CSS Design System.
+- **Backend**: Node.js, Express, MySQL2 (Connection Pool), JSON Web Tokens (JWT), bcryptjs.
+- **Database**: MySQL 8.0+ (`emp_db`) with tables: `admins`, `employees`, `attendance`, `tasks`.
+
+---
+
+## 🚀 How to Run the Application
+
+### 1. Database Setup (MySQL)
+Ensure your MySQL service is running locally on port 3306.
+The database `emp_db` and all tables will automatically be created and seeded on server start!
+Or run [schema.sql](schema.sql) in MySQL Workbench.
+
+### 2. Start the Backend Server (Port 5000)
+```powershell
 npm run server
 ```
-- Running at: `http://localhost:5000`
-- API Endpoint: `http://localhost:5000/api/employees`
-- Database: `employees.sqlite`
+- API Base URL: `http://localhost:5000/api`
+- Health check: `http://localhost:5000/api/health`
 
-### 2. Start the Frontend Application
+### 3. Start the Frontend Application (Port 3000)
 In another terminal:
-```bash
+```powershell
 npm run dev
 ```
-- Open in browser: `http://localhost:5173`
+- Open in your browser: **`http://localhost:3000`**
 
 ---
 
-## 📡 REST API Endpoints
+## 🔑 Default Login Credentials
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Check database status |
-| `GET` | `/api/employees` | Get all employee records |
-| `GET` | `/api/employees/:id` | Get single employee details |
-| `POST` | `/api/employees` | Insert a new employee record |
-| `PUT` | `/api/employees/:id` | Update an existing employee |
-| `DELETE` | `/api/employees/:id` | Remove an employee record |
-| `DELETE` | `/api/employees` | Clear all records |
+| Role | Email ID | Password | Access Area |
+|---|---|---|---|
+| **Admin** | `admin@ems.com` | `admin123` | Complete Admin Dashboard & Controls |
+| **Employee** | `roshan@gmail.com` | `employee123` | Personal Attendance & Task Portal |
+| **Employee** | `saran@gmail.com` | `employee123` | Personal Attendance & Task Portal |
+
+---
+
+## 📡 Core API Routes
+
+- `POST /api/auth/admin/login` — Administrator login
+- `POST /api/auth/employee/login` — Employee portal login
+- `GET  /api/health` — Server and MySQL connection status
+- `GET  /api/admin/employees` — Fetch all employees
+- `POST /api/admin/employees` — Register new employee
+- `PUT  /api/admin/employees/:id` — Update employee
+- `DELETE /api/admin/employees/:id` — Delete employee
+- `POST /api/admin/employees/:id/reset-password` — Set employee password
+- `GET  /api/attendance` — Attendance records and stats
+- `POST /api/attendance/check-in` — Employee attendance check-in
+- `POST /api/attendance/check-out` — Employee attendance check-out
+- `GET  /api/tasks` — Tasks list and assignment

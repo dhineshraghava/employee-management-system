@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Users,
   UserPlus,
   Search,
   X,
   RefreshCw,
   AlertCircle,
   CheckCircle,
-  KeyRound,
   Lock,
 } from 'lucide-react';
 import EmployeeTable from '../components/EmployeeTable';

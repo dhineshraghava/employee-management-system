@@ -2,15 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   CheckSquare,
   Search,
-  Filter,
   RefreshCw,
   X,
   AlertCircle,
   CheckCircle,
-  Clock,
   Calendar,
   AlertTriangle,
-  Flag,
 } from 'lucide-react';
 import { getEmployeeTasks, updateEmployeeTaskStatus } from '../../services/api';
 

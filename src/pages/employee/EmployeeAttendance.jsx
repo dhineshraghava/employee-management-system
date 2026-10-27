@@ -8,8 +8,6 @@ import {
   X,
   AlertCircle,
   CheckCircle,
-  Calendar,
-  Filter,
 } from 'lucide-react';
 import {
   getEmployeeAttendance,
@@ -88,7 +86,7 @@ export default function EmployeeAttendance() {
   };
 
   // Find today's record
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = React.useMemo(() => new Date().toISOString().split('T')[0], []);
   const todayRecord = records.find((r) => r.date === todayStr);
 
   const isCheckedIn = Boolean(todayRecord && todayRecord.check_in);
