@@ -1,180 +1,177 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import JsBarcode from 'jsbarcode';
 import {
   Building2,
   Printer,
   Download,
+  Eye,
   ShieldCheck,
-  Sparkles,
-  QrCode,
-  Briefcase,
   X,
 } from 'lucide-react';
 
-export default function EmployeeBarcodeCard({ employee, onClose, isModal = false }) {
+export default function EmployeeBarcodeCard({ employee, onClose, isModal = false, onViewModal }) {
   const canvasRef = useRef(null);
+  const [internalModalOpen, setInternalModalOpen] = useState(false);
 
-  const barcodeValue = employee?.barcode || (employee?.id ? `EMP-${employee.id}` : 'EMP-000');
+  const rawId = employee?.id || '1';
+  const barcodeValue = employee?.barcode || `EMP-${rawId}`;
   const employeeName = employee?.name || 'Staff Member';
-  const employeeRole = employee?.designation || 'Specialist';
   const department = employee?.department || 'Operations';
   const email = employee?.email || 'staff@ems.com';
-  const employeeId = employee?.id || '---';
+  const displayId = String(barcodeValue).startsWith('EMP-') ? barcodeValue : `EMP-${rawId}`;
 
-  useEffect(() => {
+  const renderBarcode = () => {
     if (canvasRef.current && barcodeValue) {
       try {
         JsBarcode(canvasRef.current, barcodeValue, {
           format: 'CODE128',
-          lineColor: '#090d16',
-          width: 2.3,
-          height: 60,
+          lineColor: '#0f172a',
+          width: 2.0,
+          height: 48,
           displayValue: true,
           font: 'monospace',
-          fontSize: 15,
+          fontSize: 13,
           fontOptions: 'bold',
-          textMargin: 6,
+          textMargin: 4,
           background: '#ffffff',
-          margin: 10,
+          margin: 6,
         });
       } catch (err) {
         console.error('Failed to generate Code 128 barcode:', err);
       }
     }
+  };
+
+  useEffect(() => {
+    renderBarcode();
   }, [barcodeValue]);
 
-  const handleDownload = () => {
+  const handleDownload = (e) => {
+    e?.stopPropagation();
     if (canvasRef.current) {
       const link = document.createElement('a');
-      link.download = `StaffPulse_${barcodeValue}_ID_Card.png`;
+      link.download = `StaffPulse_${barcodeValue}_Badge.png`;
       link.href = canvasRef.current.toDataURL('image/png');
       link.click();
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = (e) => {
+    e?.stopPropagation();
     window.print();
   };
 
+  const handleOpenView = (e) => {
+    e?.stopPropagation();
+    if (onViewModal) {
+      onViewModal(employee);
+    } else {
+      setInternalModalOpen(true);
+    }
+  };
+
+  const initial = (employeeName || 'E').charAt(0).toUpperCase();
+
   const cardContent = (
-    <div className="id-card-element" id={`id-card-${barcodeValue}`}>
-      {/* Top Lanyard Punch Hole Decoration */}
-      <div className="id-card-punch-hole"></div>
-
-      {/* Card Header Branding */}
-      <div className="id-card-header">
-        <div className="id-card-brand-row">
-          <div className="id-card-logo-box">
-            <Building2 size={20} color="#ffffff" />
-          </div>
-          <div className="id-card-brand-info">
-            <span className="id-card-brand-name">StaffPulse EMS</span>
-            <span className="id-card-brand-sub">Corporate Staff ID</span>
-          </div>
+    <div className="clean-barcode-card" id={`barcode-card-${barcodeValue}`}>
+      {/* 1. Dark Navy Top Strip with Company Name and Employee ID */}
+      <div className="card-navy-top-strip">
+        <div className="strip-brand">
+          <Building2 size={15} className="strip-logo-icon" />
+          <span className="strip-company-name">StaffPulse EMS</span>
         </div>
-        <div className="id-card-chip-badge">
-          <ShieldCheck size={12} />
-          <span>OFFICIAL ID</span>
+        <span className="strip-employee-id">{displayId}</span>
+      </div>
+
+      {/* 2. White Card Content Area */}
+      <div className="card-white-body">
+        {/* Simple Avatar with Initial */}
+        <div className="card-avatar-wrapper">
+          <div className="card-avatar-circle">{initial}</div>
+        </div>
+
+        {/* Employee Details */}
+        <h4 className="card-emp-name">{employeeName}</h4>
+        <p className="card-emp-dept">{department}</p>
+        <p className="card-emp-email">{email}</p>
+
+        {/* Barcode Section */}
+        <div className="card-barcode-box">
+          <canvas ref={canvasRef} className="card-barcode-canvas" />
+          <span className="scan-attendance-label">Scan for Attendance</span>
         </div>
       </div>
 
-      {/* Card Photo / Avatar Area */}
-      <div className="id-card-avatar-section">
-        <div className="id-card-avatar-ring">
-          <div className="id-card-avatar">
-            {employeeName
-              .split(' ')
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join('')
-              .toUpperCase()}
-          </div>
-        </div>
-        <h3 className="id-card-employee-name">{employeeName}</h3>
-        <p className="id-card-employee-role">{employeeRole}</p>
-        <div className="id-card-dept-pill">
-          <Briefcase size={12} />
-          <span>{department}</span>
-        </div>
-      </div>
+      {/* 3. Card Action Buttons: View Card, Download, Print */}
+      {!isModal && (
+        <div className="card-actions-strip no-print">
+          <button
+            type="button"
+            className="btn-card-action"
+            onClick={handleOpenView}
+            title="Preview Card"
+          >
+            <Eye size={13} />
+            <span>View Card</span>
+          </button>
 
-      {/* Card Meta Details */}
-      <div className="id-card-meta-list">
-        <div className="id-card-meta-item">
-          <span className="meta-label">Employee ID:</span>
-          <span className="meta-value">#{employeeId}</span>
-        </div>
-        <div className="id-card-meta-item">
-          <span className="meta-label">Barcode UID:</span>
-          <span className="meta-value highlight">{barcodeValue}</span>
-        </div>
-        <div className="id-card-meta-item">
-          <span className="meta-label">Email:</span>
-          <span className="meta-value text-truncate">{email}</span>
-        </div>
-        <div className="id-card-meta-item">
-          <span className="meta-label">Status:</span>
-          <span className="meta-value active-status">● Active Employee</span>
-        </div>
-      </div>
+          <button
+            type="button"
+            className="btn-card-action"
+            onClick={handleDownload}
+            title="Download PNG"
+          >
+            <Download size={13} />
+            <span>Download</span>
+          </button>
 
-      {/* Code 128 High-Resolution Barcode Canvas */}
-      <div className="id-card-barcode-box">
-        <canvas ref={canvasRef} className="id-barcode-canvas" />
-        <span className="barcode-standard-tag">STANDARD CODE 128 HIGH DENSITY</span>
-      </div>
-
-      {/* Card Footer Security Microprint */}
-      <div className="id-card-footer">
-        <ShieldCheck size={13} className="text-cyan" />
-        <span>StaffPulse Employee Management System • Scan for Attendance</span>
-      </div>
+          <button
+            type="button"
+            className="btn-card-action"
+            onClick={handlePrint}
+            title="Print Card"
+          >
+            <Printer size={13} />
+            <span>Print</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 
+  // If rendered as a full modal
   if (isModal) {
     return (
-      <div className="id-card-modal-backdrop" onClick={onClose}>
-        <div
-          className="id-card-modal-content"
-          onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-label="Employee Barcode ID Card"
-        >
-          <div className="id-card-modal-header no-print">
-            <div className="modal-header-title">
-              <QrCode size={20} className="text-cyan" />
-              <span>Employee Barcode Identity Card</span>
-            </div>
-            <button type="button" className="modal-close-btn" onClick={onClose}>
-              <X size={20} />
+      <div className="card-modal-backdrop" onClick={onClose}>
+        <div className="card-modal-container" onClick={(e) => e.stopPropagation()}>
+          <div className="card-modal-header no-print">
+            <h3 className="modal-title">Employee Barcode Identity Card</h3>
+            <button type="button" className="modal-close-icon" onClick={onClose}>
+              <X size={18} />
             </button>
           </div>
 
-          <div className="id-card-modal-body">
+          <div className="card-modal-body">
             {cardContent}
+          </div>
 
-            {/* Action Buttons */}
-            <div className="id-card-modal-actions no-print">
-              <button
-                type="button"
-                className="btn btn-secondary btn-id-card-action"
-                onClick={handleDownload}
-                id="btn-download-barcode-img"
-              >
-                <Download size={16} />
-                <span>Download Barcode PNG</span>
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-id-card-action"
-                onClick={handlePrint}
-                id="btn-print-id-card"
-              >
-                <Printer size={16} />
-                <span>Print ID Card</span>
-              </button>
-            </div>
+          <div className="card-modal-footer no-print">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={handleDownload}
+            >
+              <Download size={15} />
+              <span>Download Image</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handlePrint}
+            >
+              <Printer size={15} />
+              <span>Print Badge</span>
+            </button>
           </div>
         </div>
       </div>
@@ -182,28 +179,18 @@ export default function EmployeeBarcodeCard({ employee, onClose, isModal = false
   }
 
   return (
-    <div className="id-card-standalone-wrapper">
-      {cardContent}
-      <div className="id-card-action-bar no-print">
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          onClick={handleDownload}
-          id="btn-download-barcode"
-        >
-          <Download size={15} />
-          <span>Save PNG</span>
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          onClick={handlePrint}
-          id="btn-print-barcode-card"
-        >
-          <Printer size={15} />
-          <span>Print Card</span>
-        </button>
+    <>
+      <div className="barcode-card-outer">
+        {cardContent}
       </div>
-    </div>
+
+      {internalModalOpen && (
+        <EmployeeBarcodeCard
+          employee={employee}
+          isModal={true}
+          onClose={() => setInternalModalOpen(false)}
+        />
+      )}
+    </>
   );
 }

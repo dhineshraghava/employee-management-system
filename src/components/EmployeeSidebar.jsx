@@ -42,12 +42,12 @@ export default function EmployeeSidebar({ isOpen, onClose }) {
         {/* Brand Header */}
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <div className="brand-logo-icon employee-badge-bg">
-              <Briefcase size={22} color="#ffffff" />
+            <div className="brand-logo-icon">
+              <Briefcase size={20} color="#ffffff" />
             </div>
             <div className="brand-text">
-              <span className="brand-title">Employee Portal</span>
-              <span className="brand-subtitle">StaffPulse EMS</span>
+              <span className="brand-title">StaffPulse EMS</span>
+              <span className="brand-subtitle">Employee Portal</span>
             </div>
           </div>
           <button className="sidebar-close-btn" onClick={onClose} aria-label="Close Sidebar">
@@ -66,56 +66,14 @@ export default function EmployeeSidebar({ isOpen, onClose }) {
 
         {/* Navigation Links */}
         <nav className="sidebar-nav">
-          <div className="nav-section-title">MY WORKSPACE</div>
-
           <NavLink
             to="/employee/dashboard"
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             onClick={onClose}
             id="nav-emp-dashboard"
           >
-            <LayoutDashboard size={20} className="link-icon" />
+            <LayoutDashboard size={18} className="link-icon" />
             <span className="link-text">My Dashboard</span>
-          </NavLink>
-
-          <NavLink
-            to="/employee/profile"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            id="nav-emp-profile"
-          >
-            <User size={20} className="link-icon" />
-            <span className="link-text">Profile & ID Card</span>
-          </NavLink>
-
-          <NavLink
-            to="/employee/barcode-attendance"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            id="nav-emp-barcode-scanner"
-          >
-            <Camera size={20} className="link-icon text-cyan" />
-            <span className="link-text">Barcode Scanner</span>
-          </NavLink>
-
-          <NavLink
-            to="/employee/attendance"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            id="nav-emp-attendance"
-          >
-            <CalendarCheck size={20} className="link-icon" />
-            <span className="link-text">Mark Attendance</span>
-          </NavLink>
-
-          <NavLink
-            to="/employee/leaves"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            id="nav-emp-leaves"
-          >
-            <CalendarOff size={20} className="link-icon" />
-            <span className="link-text">Apply Leave</span>
           </NavLink>
 
           <NavLink
@@ -124,8 +82,48 @@ export default function EmployeeSidebar({ isOpen, onClose }) {
             onClick={onClose}
             id="nav-emp-tasks"
           >
-            <CheckSquare size={20} className="link-icon" />
+            <CheckSquare size={18} className="link-icon" />
             <span className="link-text">My Tasks</span>
+          </NavLink>
+
+          <NavLink
+            to="/employee/attendance"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-emp-attendance"
+          >
+            <CalendarCheck size={18} className="link-icon" />
+            <span className="link-text">My Attendance</span>
+          </NavLink>
+
+          <NavLink
+            to="/employee/profile"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-emp-profile"
+          >
+            <User size={18} className="link-icon" />
+            <span className="link-text">My Profile</span>
+          </NavLink>
+
+          <NavLink
+            to="/employee/leaves"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-emp-leaves"
+          >
+            <CalendarOff size={18} className="link-icon" />
+            <span className="link-text">Apply Leave</span>
+          </NavLink>
+
+          <NavLink
+            to="/employee/barcode-attendance"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-emp-barcode-scanner"
+          >
+            <Camera size={18} className="link-icon" />
+            <span className="link-text">Barcode Scanner</span>
           </NavLink>
         </nav>
 

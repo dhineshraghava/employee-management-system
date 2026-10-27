@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User,
@@ -13,6 +13,11 @@ import {
   ArrowRight,
   Briefcase,
   CalendarOff,
+  CreditCard,
+  Building2,
+  Printer,
+  Download,
+  Eye,
 } from 'lucide-react';
 import {
   getEmployeeDashboardStats,
@@ -21,10 +26,12 @@ import {
   updateEmployeeTaskStatus,
 } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import EmployeeBarcodeCard from '../../components/EmployeeBarcodeCard';
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const badgeSectionRef = useRef(null);
 
   const [data, setData] = useState({
     profile: null,
@@ -43,6 +50,7 @@ export default function EmployeeDashboard() {
   const [toastMessage, setToastMessage] = useState(null);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [showIdCardModal, setShowIdCardModal] = useState(false);
 
   const showToast = (type, text) => {
     setToastMessage({ type, text });
@@ -108,12 +116,29 @@ export default function EmployeeDashboard() {
     }
   };
 
+  const scrollToBadge = () => {
+    if (badgeSectionRef.current) {
+      badgeSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      setShowIdCardModal(true);
+    }
+  };
+
   const todayAtt = data.todayAttendance;
   const isCheckedIn = Boolean(todayAtt && todayAtt.check_in);
   const isCheckedOut = Boolean(todayAtt && todayAtt.check_out);
 
+  const employeeObject = {
+    id: data.profile?.id || user?.id || 1,
+    name: data.profile?.name || user?.name || 'Staff Member',
+    department: data.profile?.department || user?.department || 'Operations',
+    designation: data.profile?.designation || 'Specialist',
+    email: data.profile?.email || user?.email || 'employee@ems.com',
+    barcode: data.profile?.barcode || `EMP-${data.profile?.id || user?.id || 1}`,
+  };
+
   return (
-    <div className="employee-dashboard-page">
+    <div className="employee-dashboard-page hr-theme-page">
       {/* Toast Notification */}
       {toastMessage && (
         <div className={`page-toast ${toastMessage.type}`} role="alert">
@@ -129,72 +154,96 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* Welcome Banner */}
-      <div className="welcome-banner emp-banner">
-        <div className="welcome-content">
-          <div className="badge-pill emp-pill">
-            <User size={14} />
-            <span>Employee Workspace • ID: #{user?.id}</span>
+      {/* 1. Welcome Panel (Compact Dark Navy) */}
+      <div className="compact-navy-header">
+        <div className="header-meta-group">
+          <div className="employee-avatar-box">
+            {(user?.name || 'E').charAt(0).toUpperCase()}
           </div>
-          <h1 className="welcome-title">Welcome back, {user?.name || 'Employee'}!</h1>
-          <p className="welcome-subtitle">
-            Department: <strong>{data.profile?.department || user?.department || 'General'}</strong> | Designation: <strong>{data.profile?.designation || 'Staff'}</strong> | Email: <strong>{user?.email}</strong>
-          </p>
+          <div>
+            <h1 className="header-greeting">Welcome back, {user?.name || 'Employee'}</h1>
+            <div className="header-emp-meta-row">
+              <span className="badge-tag">ID: EMP-{user?.id || '—'}</span>
+              <span className="dot-divider">•</span>
+              <span>Dept: {data.profile?.department || user?.department || 'General'}</span>
+              <span className="dot-divider">•</span>
+              <span>{user?.email}</span>
+            </div>
+            <div className="header-today-status">
+              <span>Today's Attendance: </span>
+              <strong>
+                {todayAtt
+                  ? `${todayAtt.status} (In: ${todayAtt.check_in || '—'}${todayAtt.check_out ? `, Out: ${todayAtt.check_out}` : ''})`
+                  : 'Not Marked Today'}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="header-actions-group">
+          <button
+            type="button"
+            className="btn btn-navy-action"
+            onClick={scrollToBadge}
+            id="btn-emp-my-id-card"
+          >
+            <CreditCard size={15} />
+            <span>My ID Card</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-navy-primary"
+            onClick={() => navigate('/employee/attendance')}
+          >
+            <Clock size={15} />
+            <span>Mark Attendance</span>
+          </button>
         </div>
       </div>
 
-      {/* Quick Attendance Check-In / Check-Out Widget */}
-      <div className="emp-attendance-action-card">
-        <div className="attendance-action-info">
-          <div className="clock-icon-box">
-            <Clock size={28} className="text-teal" />
-          </div>
+      {/* Quick Attendance Action Row */}
+      <div className="attendance-punch-card">
+        <div className="punch-info">
+          <Clock size={20} className="text-primary" />
           <div>
-            <h3 className="attendance-action-title">Today's Attendance Status</h3>
-            <p className="attendance-action-sub">
-              {todayAtt ? (
-                <span>
-                  Status: <strong>{todayAtt.status}</strong> |{' '}
-                  Check-in: <strong>{todayAtt.check_in || 'Pending'}</strong> |{' '}
-                  Check-out: <strong>{todayAtt.check_out || 'Pending'}</strong>
-                </span>
-              ) : (
-                'You have not marked attendance for today yet.'
-              )}
-            </p>
+            <span className="punch-title">Daily Attendance Punch</span>
+            <span className="punch-sub">
+              {todayAtt
+                ? `Check-in recorded at ${todayAtt.check_in || 'Pending'}. Status: ${todayAtt.status}.`
+                : 'Punches are logged directly to the MySQL attendance table.'}
+            </span>
           </div>
         </div>
-
-        <div className="attendance-action-buttons">
+        <div className="punch-buttons">
           <button
             type="button"
-            className="btn btn-teal"
+            className="btn btn-sm btn-success"
             onClick={handleCheckIn}
             disabled={isCheckedIn || checkingIn}
-            id="btn-emp-checkin"
+            id="btn-emp-quick-checkin"
           >
-            <LogIn size={18} />
-            <span>{isCheckedIn ? `Checked In (${todayAtt.check_in})` : checkingIn ? 'Recording...' : 'Check In Now'}</span>
+            <LogIn size={14} />
+            <span>{isCheckedIn ? `Checked In (${todayAtt.check_in})` : checkingIn ? 'Recording...' : 'Check In'}</span>
           </button>
 
           <button
             type="button"
-            className="btn btn-outline-dark"
+            className="btn btn-sm btn-outline-dark"
             onClick={handleCheckOut}
             disabled={!isCheckedIn || isCheckedOut || checkingOut}
-            id="btn-emp-checkout"
+            id="btn-emp-quick-checkout"
           >
-            <LogOut size={18} />
-            <span>{isCheckedOut ? `Checked Out (${todayAtt.check_out})` : checkingOut ? 'Recording...' : 'Check Out Now'}</span>
+            <LogOut size={14} />
+            <span>{isCheckedOut ? `Checked Out (${todayAtt.check_out})` : checkingOut ? 'Recording...' : 'Check Out'}</span>
           </button>
 
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-sm btn-outline-primary"
             onClick={() => navigate('/employee/leaves')}
-            id="btn-emp-apply-leave-dash"
           >
-            <CalendarOff size={18} />
+            <CalendarOff size={14} />
             <span>Apply Leave</span>
           </button>
         </div>
@@ -211,183 +260,178 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* Overview Cards */}
-      <div className="stats-cards-grid">
-        <div className="stat-card stat-teal cursor-pointer" onClick={() => navigate('/employee/leaves')}>
-          <div className="stat-card-icon-box">
-            <CalendarOff size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">My Leaves</span>
-            <h2 className="stat-card-value">{loading ? '...' : data.approvedLeaves || 0}</h2>
-            <span className="stat-card-meta">
-              {data.pendingLeaves ? `${data.pendingLeaves} pending approval` : 'Click to apply'}
-            </span>
-          </div>
-        </div>
-
-        <div className="stat-card stat-blue cursor-pointer" onClick={() => navigate('/employee/tasks')}>
-          <div className="stat-card-icon-box">
-            <CheckSquare size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">My Assigned Tasks</span>
-            <h2 className="stat-card-value">{loading ? '...' : data.totalTasks}</h2>
-            <span className="stat-card-meta">Assigned by admin</span>
-          </div>
-        </div>
-
-        <div className="stat-card stat-amber cursor-pointer" onClick={() => navigate('/employee/tasks')}>
-          <div className="stat-card-icon-box">
-            <Clock size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">Pending</span>
-            <h2 className="stat-card-value">{loading ? '...' : data.pendingTasks}</h2>
-            <span className="stat-card-meta">Awaiting start</span>
-          </div>
-        </div>
-
-        <div className="stat-card stat-purple cursor-pointer" onClick={() => navigate('/employee/tasks')}>
-          <div className="stat-card-icon-box">
-            <Briefcase size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">In Progress</span>
-            <h2 className="stat-card-value">{loading ? '...' : data.inProgressTasks}</h2>
-            <span className="stat-card-meta">Being actively worked</span>
-          </div>
-        </div>
-
-        <div className="stat-card stat-teal cursor-pointer" onClick={() => navigate('/employee/tasks')}>
-          <div className="stat-card-icon-box">
-            <CheckCircle size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">Completed</span>
-            <h2 className="stat-card-value">{loading ? '...' : data.completedTasks}</h2>
-            <span className="stat-card-meta">Finished deliverables</span>
-          </div>
-        </div>
-
-        {data.overdueTasks > 0 && (
-          <div className="stat-card stat-red">
-            <div className="stat-card-icon-box">
-              <AlertTriangle size={24} />
-            </div>
-            <div className="stat-card-content">
-              <span className="stat-card-label">Overdue Tasks</span>
-              <h2 className="stat-card-value">{data.overdueTasks}</h2>
-              <span className="stat-card-meta">Past target deadline!</span>
+      {/* 2. Five Summary KPI Cards in Responsive Grid */}
+      <div className="kpi-summary-grid-5">
+        {/* Card 1: Today's Attendance */}
+        <div className="kpi-card" onClick={() => navigate('/employee/attendance')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Today's Attendance</span>
+            <div className={`kpi-icon-pill ${todayAtt ? 'green' : 'amber'}`}>
+              <CalendarCheck size={18} />
             </div>
           </div>
-        )}
+          <div className="kpi-value text-base">
+            {todayAtt ? todayAtt.status : 'Not Marked'}
+          </div>
+          <div className="kpi-footer-meta">
+            {todayAtt?.check_in ? `In at ${todayAtt.check_in}` : 'Awaiting check-in'}
+          </div>
+        </div>
+
+        {/* Card 2: Total Assigned Tasks */}
+        <div className="kpi-card" onClick={() => navigate('/employee/tasks')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Total Assigned</span>
+            <div className="kpi-icon-pill blue">
+              <CheckSquare size={18} />
+            </div>
+          </div>
+          <div className="kpi-value">{loading ? '...' : data.totalTasks}</div>
+          <div className="kpi-footer-meta">Assigned by admin</div>
+        </div>
+
+        {/* Card 3: Pending Tasks */}
+        <div className="kpi-card" onClick={() => navigate('/employee/tasks')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Pending</span>
+            <div className="kpi-icon-pill amber">
+              <Clock size={18} />
+            </div>
+          </div>
+          <div className="kpi-value">{loading ? '...' : data.pendingTasks}</div>
+          <div className="kpi-footer-meta">Awaiting start</div>
+        </div>
+
+        {/* Card 4: In Progress */}
+        <div className="kpi-card" onClick={() => navigate('/employee/tasks')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">In Progress</span>
+            <div className="kpi-icon-pill blue">
+              <Briefcase size={18} />
+            </div>
+          </div>
+          <div className="kpi-value">{loading ? '...' : data.inProgressTasks}</div>
+          <div className="kpi-footer-meta">Under active work</div>
+        </div>
+
+        {/* Card 5: Completed */}
+        <div className="kpi-card" onClick={() => navigate('/employee/tasks')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Completed</span>
+            <div className="kpi-icon-pill green">
+              <CheckCircle size={18} />
+            </div>
+          </div>
+          <div className="kpi-value">{loading ? '...' : data.completedTasks}</div>
+          <div className="kpi-footer-meta">Deliverables finished</div>
+        </div>
       </div>
 
-      {/* Two Column Grid: Recent Assigned Tasks & Attendance Log */}
-      <div className="dashboard-grid-sections">
-        {/* Assigned Tasks */}
-        <div className="dashboard-section-card">
-          <div className="section-card-header">
-            <div className="header-title-box">
-              <CheckSquare size={20} className="text-blue" />
-              <h3>My Recent Tasks</h3>
+      {/* 3. Two Column Content Layout: My Recent Tasks & My Barcode Badge */}
+      <div className="dashboard-data-grid">
+        {/* Left Column: My Recent Tasks */}
+        <div className="content-card">
+          <div className="content-card-header">
+            <div>
+              <h3 className="content-card-title">My Recent Tasks</h3>
+              <p className="content-card-sub">Assigned tasks and updateable progress states</p>
             </div>
-            <button className="btn-text-link" onClick={() => navigate('/employee/tasks')}>
+            <button
+              type="button"
+              className="btn-text-action"
+              onClick={() => navigate('/employee/tasks')}
+            >
               View All Tasks <ArrowRight size={14} />
             </button>
           </div>
 
-          <div className="section-card-body">
+          <div className="table-responsive">
             {loading ? (
-              <div className="section-loading">Loading your assigned tasks...</div>
+              <div className="p-4 text-center text-muted">Loading assigned tasks...</div>
             ) : data.recentTasks.length === 0 ? (
-              <div className="recent-empty">
-                <p>No tasks currently assigned to you.</p>
+              <div className="clean-empty-state">
+                <CheckSquare size={36} className="text-muted mb-2" />
+                <p className="text-secondary font-semibold">No tasks assigned yet.</p>
+                <span className="text-xs text-muted">New tasks assigned by administrators will appear here.</span>
               </div>
             ) : (
-              <div className="recent-employees-list">
-                {data.recentTasks.map((t) => (
-                  <div key={t.id} className="recent-employee-row">
-                    <div className="recent-info" style={{ flex: 1 }}>
-                      <div className="flex-align-center gap-6">
-                        <h4 className="recent-name">{t.title}</h4>
-                        {t.is_overdue === 1 && (
-                          <span className="overdue-tag">
-                            <AlertTriangle size={12} /> Overdue
-                          </span>
-                        )}
-                      </div>
-                      <p className="recent-email">
-                        Due: {t.due_date || 'No deadline'} | Priority: {t.priority}
-                      </p>
-                    </div>
-
-                    <div>
-                      <select
-                        className={`status-select ${
-                          t.status === 'Completed'
-                            ? 'badge-present'
-                            : t.status === 'In Progress'
-                            ? 'badge-late'
-                            : 'badge-absent'
-                        }`}
-                        value={t.status}
-                        onChange={(e) => handleStatusChange(t.id, e.target.value)}
-                        title="Update task status"
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
-                      </select>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <table className="hr-compact-table">
+                <thead>
+                  <tr>
+                    <th>Task Title</th>
+                    <th>Due Date</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recentTasks.map((t) => (
+                    <tr key={t.id}>
+                      <td>
+                        <div className="flex-align-center gap-6">
+                          <strong className="text-navy">{t.title}</strong>
+                          {t.is_overdue === 1 && (
+                            <span className="overdue-micro-badge">
+                              <AlertTriangle size={11} /> Overdue
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>{t.due_date || 'No deadline'}</td>
+                      <td>
+                        <span className={`priority-tag ${(t.priority || 'medium').toLowerCase()}`}>
+                          {t.priority}
+                        </span>
+                      </td>
+                      <td>
+                        <select
+                          className="status-select-sm"
+                          value={t.status}
+                          onChange={(e) => handleStatusChange(t.id, e.target.value)}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
 
-        {/* Recent Attendance */}
-        <div className="dashboard-section-card">
-          <div className="section-card-header">
-            <div className="header-title-box">
-              <CalendarCheck size={20} className="text-teal" />
-              <h3>My Attendance History</h3>
+        {/* Right Column: My Attendance Barcode Badge */}
+        <div className="content-card" ref={badgeSectionRef}>
+          <div className="content-card-header">
+            <div>
+              <h3 className="content-card-title">My Attendance Barcode Badge</h3>
+              <p className="content-card-sub">Official digital identity card with Code 128 barcode</p>
             </div>
-            <button className="btn-text-link" onClick={() => navigate('/employee/attendance')}>
-              View Full History <ArrowRight size={14} />
+            <button
+              type="button"
+              className="btn-text-action"
+              onClick={() => setShowIdCardModal(true)}
+            >
+              <Eye size={14} /> Full View
             </button>
           </div>
 
-          <div className="section-card-body">
-            {loading ? (
-              <div className="section-loading">Loading attendance history...</div>
-            ) : data.recentAttendance.length === 0 ? (
-              <div className="recent-empty">
-                <p>No attendance records logged yet.</p>
-              </div>
-            ) : (
-              <div className="recent-employees-list">
-                {data.recentAttendance.map((att) => (
-                  <div key={att.id} className="recent-employee-row">
-                    <div className="recent-info">
-                      <h4 className="recent-name">{att.date}</h4>
-                      <p className="recent-email">
-                        {att.check_in ? `In: ${att.check_in}` : 'No check-in'}{' '}
-                        {att.check_out ? `• Out: ${att.check_out}` : ''}
-                      </p>
-                    </div>
-                    <div className={`status-pill badge-${att.status.toLowerCase()}`}>
-                      {att.status}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="badge-preview-container">
+            <EmployeeBarcodeCard employee={employeeObject} isModal={false} />
           </div>
         </div>
       </div>
+
+      {/* Modal View for ID Card if requested */}
+      {showIdCardModal && (
+        <EmployeeBarcodeCard
+          employee={employeeObject}
+          isModal={true}
+          onClose={() => setShowIdCardModal(false)}
+        />
+      )}
     </div>
   );
 }

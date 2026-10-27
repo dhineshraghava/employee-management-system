@@ -9,7 +9,7 @@ export default function Navbar({ onToggleSidebar, activePage, serverOnline }) {
 
   const handleLogout = () => {
     logout();
-    navigate(isAdmin ? '/login/admin' : '/login/employee');
+    navigate('/login');
   };
 
   const getPageTitle = () => {

@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  QrCode,
   Search,
   Filter,
   Printer,
-  Download,
-  Building2,
-  Users,
-  Eye,
   RefreshCw,
-  Sparkles,
-  CreditCard,
+  Users,
 } from 'lucide-react';
 import { getAdminEmployees } from '../../services/api';
 import EmployeeBarcodeCard from '../../components/EmployeeBarcodeCard';
@@ -20,7 +14,7 @@ export default function AdminBarcodeCards() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [modalEmployee, setModalEmployee] = useState(null);
 
   const fetchEmployeesList = async () => {
     try {
@@ -50,12 +44,14 @@ export default function AdminBarcodeCards() {
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
+      const q = searchTerm.trim().toLowerCase();
       const matchesSearch =
-        !searchTerm.trim() ||
-        emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (emp.barcode && emp.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        String(emp.id).includes(searchTerm.trim());
+        !q ||
+        (emp.name && emp.name.toLowerCase().includes(q)) ||
+        (emp.email && emp.email.toLowerCase().includes(q)) ||
+        (emp.department && emp.department.toLowerCase().includes(q)) ||
+        (emp.barcode && emp.barcode.toLowerCase().includes(q)) ||
+        String(emp.id).includes(q);
 
       const matchesDept =
         departmentFilter === 'ALL' || emp.department === departmentFilter;
@@ -69,104 +65,113 @@ export default function AdminBarcodeCards() {
   };
 
   return (
-    <div className="admin-barcode-cards-page">
-      {/* Page Header */}
-      <div className="page-header barcode-cards-header no-print">
-        <div className="header-title-group">
-          <div className="header-icon-badge">
-            <CreditCard size={26} className="text-cyan" />
-          </div>
-          <div>
-            <h1 className="page-title">Employee Barcode ID Cards</h1>
-            <p className="page-subtitle">
-              Manage, preview, download, and print official Code 128 barcode identity badges for company employees.
-            </p>
-          </div>
+    <div className="admin-barcode-cards-page hr-theme-page">
+      {/* 1. Page Header */}
+      <div className="page-header-row no-print">
+        <div>
+          <h1 className="page-main-title">Employee Barcode Cards</h1>
+          <p className="page-sub-title">
+            Generate, preview, download, and print employee barcode cards.
+          </p>
         </div>
 
-        <div className="header-actions">
+        <div className="page-header-buttons">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
             onClick={fetchEmployeesList}
-            title="Refresh list"
+            title="Refresh employee records"
+            disabled={loading}
             id="btn-refresh-cards"
           >
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
-            <span>Sync Records</span>
+            <RefreshCw size={14} className={loading ? 'spin' : ''} />
+            <span>Refresh</span>
           </button>
+
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             onClick={handlePrintAll}
-            id="btn-print-all-cards"
+            id="btn-print-displayed-cards"
           >
-            <Printer size={16} />
-            <span>Print Filtered Badges</span>
+            <Printer size={14} />
+            <span>Print Displayed Cards</span>
           </button>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="card-filters-bar no-print">
-        <div className="search-input-wrapper">
-          <Search size={18} className="search-icon" />
-          <input
-            type="text"
-            className="form-input search-input"
-            placeholder="Search employee name, ID, email, or barcode UID (e.g. EMP-1)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            id="input-search-cards"
-          />
+      {/* 2. Search and Filter Bar */}
+      <div className="filter-controls-card no-print">
+        <div className="filter-inputs-group">
+          {/* Search Field */}
+          <div className="search-field-wrapper">
+            <Search size={16} className="search-field-icon" />
+            <input
+              type="text"
+              className="filter-text-input"
+              placeholder="Search by name, employee ID, department, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              id="input-search-cards"
+            />
+          </div>
+
+          {/* Department Filter Dropdown */}
+          <div className="dropdown-filter-wrapper">
+            <Filter size={15} className="dropdown-filter-icon" />
+            <select
+              className="filter-select-input"
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              id="select-dept-filter"
+            >
+              <option value="ALL">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="dept-filter-wrapper">
-          <Filter size={16} className="filter-icon" />
-          <select
-            className="form-input dept-select"
-            value={departmentFilter}
-            onChange={(e) => setDepartmentFilter(e.target.value)}
-            id="select-dept-filter"
-          >
-            <option value="ALL">All Departments ({employees.length})</option>
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
+        {/* Matching Cards Count */}
+        <div className="filter-count-badge">
+          Showing <strong>{filteredEmployees.length}</strong> of {employees.length} employee barcode cards
         </div>
       </div>
 
-      {/* Grid of Cards */}
+      {/* 3. Responsive Barcode Cards Grid (3 cols desktop, 2 cols tablet, 1 col mobile) */}
       {loading ? (
-        <div className="loading-state-card no-print">
+        <div className="loading-state-box no-print">
           <div className="loading-spinner"></div>
-          <p>Loading employee identity records from MySQL emp_db...</p>
+          <p className="mt-2 text-sm text-secondary">Loading employee identity records from database...</p>
         </div>
       ) : filteredEmployees.length > 0 ? (
-        <div className="barcode-cards-grid">
+        <div className="barcode-cards-3col-grid">
           {filteredEmployees.map((emp) => (
-            <div key={emp.id} className="badge-card-container">
-              <EmployeeBarcodeCard employee={emp} isModal={false} />
-            </div>
+            <EmployeeBarcodeCard
+              key={emp.id}
+              employee={emp}
+              isModal={false}
+              onViewModal={(e) => setModalEmployee(e)}
+            />
           ))}
         </div>
       ) : (
-        <div className="empty-state-card no-print">
-          <Users size={48} className="empty-icon text-muted" />
-          <h3>No Employee Records Match Your Query</h3>
-          <p>Try modifying your search query or department filter.</p>
+        <div className="empty-state-box no-print">
+          <Users size={44} className="text-muted mb-2" />
+          <h3 className="text-base font-bold text-navy">No Matching Employee Cards</h3>
+          <p className="text-sm text-muted">Try clearing your search query or choosing another department filter.</p>
         </div>
       )}
 
-      {/* Modal for detailed full card view */}
-      {selectedEmployee && (
+      {/* View Modal */}
+      {modalEmployee && (
         <EmployeeBarcodeCard
-          employee={selectedEmployee}
+          employee={modalEmployee}
           isModal={true}
-          onClose={() => setSelectedEmployee(null)}
+          onClose={() => setModalEmployee(null)}
         />
       )}
     </div>

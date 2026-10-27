@@ -56,12 +56,12 @@ export default function AdminSidebar({ isOpen, onClose }) {
         {/* Brand Header */}
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <div className="brand-logo-icon admin-badge-bg">
-              <ShieldCheck size={24} color="#ffffff" />
+            <div className="brand-logo-icon">
+              <ShieldCheck size={20} color="#ffffff" />
             </div>
             <div className="brand-text">
-              <span className="brand-title">Admin Portal</span>
-              <span className="brand-subtitle">StaffPulse EMS</span>
+              <span className="brand-title">StaffPulse EMS</span>
+              <span className="brand-subtitle">HR Admin Portal</span>
             </div>
           </div>
           <button className="sidebar-close-btn" onClick={onClose} aria-label="Close Sidebar">
@@ -74,21 +74,19 @@ export default function AdminSidebar({ isOpen, onClose }) {
           <div className="sidebar-avatar admin">AD</div>
           <div className="sidebar-user-info">
             <span className="sidebar-user-name">{user?.name || 'Administrator'}</span>
-            <span className="sidebar-user-role">Super Admin</span>
+            <span className="sidebar-user-role">HR Administrator</span>
           </div>
         </div>
 
         {/* Navigation Links */}
         <nav className="sidebar-nav">
-          <div className="nav-section-title">ADMINISTRATION</div>
-
           <NavLink
             to="/admin/dashboard"
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             onClick={onClose}
             id="nav-admin-dashboard"
           >
-            <LayoutDashboard size={20} className="link-icon" />
+            <LayoutDashboard size={18} className="link-icon" />
             <span className="link-text">Dashboard</span>
           </NavLink>
 
@@ -99,8 +97,8 @@ export default function AdminSidebar({ isOpen, onClose }) {
             onClick={onClose}
             id="nav-admin-employees"
           >
-            <Users size={20} className="link-icon" />
-            <span className="link-text">Employee Management</span>
+            <Users size={18} className="link-icon" />
+            <span className="link-text">Manage Employees</span>
           </NavLink>
 
           <NavLink
@@ -109,20 +107,8 @@ export default function AdminSidebar({ isOpen, onClose }) {
             onClick={onClose}
             id="nav-admin-add-emp"
           >
-            <UserPlus size={20} className="link-icon" />
-            <span className="link-text">Register Employee</span>
-          </NavLink>
-
-          <div className="nav-section-title">BARCODE & ATTENDANCE</div>
-
-          <NavLink
-            to="/admin/barcode-attendance"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            id="nav-admin-barcode-attendance"
-          >
-            <Camera size={20} className="link-icon text-cyan" />
-            <span className="link-text">Barcode Scanner</span>
+            <UserPlus size={18} className="link-icon" />
+            <span className="link-text">Add Employee</span>
           </NavLink>
 
           <NavLink
@@ -131,8 +117,18 @@ export default function AdminSidebar({ isOpen, onClose }) {
             onClick={onClose}
             id="nav-admin-barcode-cards"
           >
-            <CreditCard size={20} className="link-icon" />
-            <span className="link-text">Employee ID Badges</span>
+            <CreditCard size={18} className="link-icon" />
+            <span className="link-text">Employee Barcode Cards</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/barcode-attendance"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-admin-barcode-attendance"
+          >
+            <Camera size={18} className="link-icon" />
+            <span className="link-text">Barcode Attendance</span>
           </NavLink>
 
           <NavLink
@@ -141,8 +137,18 @@ export default function AdminSidebar({ isOpen, onClose }) {
             onClick={onClose}
             id="nav-admin-attendance"
           >
-            <CalendarCheck size={20} className="link-icon" />
+            <CalendarCheck size={18} className="link-icon" />
             <span className="link-text">Attendance Records</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/tasks"
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            id="nav-admin-tasks"
+          >
+            <CheckSquare size={18} className="link-icon" />
+            <span className="link-text">Tasks</span>
           </NavLink>
 
           <NavLink
@@ -151,7 +157,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
             onClick={onClose}
             id="nav-admin-leaves"
           >
-            <CalendarOff size={20} className="link-icon" />
+            <CalendarOff size={18} className="link-icon" />
             <span className="link-text">Leave Requests</span>
             {pendingLeavesCount > 0 && (
               <span className="sidebar-badge-count" title={`${pendingLeavesCount} pending leave applications`}>
@@ -161,23 +167,13 @@ export default function AdminSidebar({ isOpen, onClose }) {
           </NavLink>
 
           <NavLink
-            to="/admin/tasks"
-            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            id="nav-admin-tasks"
-          >
-            <CheckSquare size={20} className="link-icon" />
-            <span className="link-text">Task Management</span>
-          </NavLink>
-
-          <NavLink
             to="/admin/reports"
             className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             onClick={onClose}
             id="nav-admin-reports"
           >
-            <BarChart3 size={20} className="link-icon" />
-            <span className="link-text">Reports & Analytics</span>
+            <BarChart3 size={18} className="link-icon" />
+            <span className="link-text">Analytics</span>
           </NavLink>
         </nav>
 

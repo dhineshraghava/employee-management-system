@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
   Building,
-  TrendingUp,
   UserPlus,
   ArrowRight,
   RefreshCw,
-  Sparkles,
   AlertCircle,
   CalendarCheck,
   CheckSquare,
@@ -16,14 +14,16 @@ import {
   UserX,
   AlertTriangle,
   CalendarOff,
+  Search,
+  LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 import { getDashboardStats } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import AIWorkforceInsights from '../components/AIWorkforceInsights';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { logout, isEmployee } = useAuth();
+  const { user, logout, isEmployee } = useAuth();
 
   const [stats, setStats] = useState({
     totalEmployees: 0,
@@ -39,6 +39,7 @@ export default function Dashboard() {
     completedTasks: 0,
     overdueTasks: 0,
     totalTasks: 0,
+    pendingLeaves: 0,
     departments: [],
     recentEmployees: [],
     recentAttendance: [],
@@ -46,6 +47,8 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [attendanceSearch, setAttendanceSearch] = useState('');
+  const [taskFilter, setTaskFilter] = useState('ALL');
 
   const fetchStats = useCallback(async () => {
     try {
@@ -69,6 +72,7 @@ export default function Dashboard() {
         completedTasks: Number(raw.completedTasks ?? 0),
         overdueTasks: Number(raw.overdueTasks ?? 0),
         totalTasks: Number(raw.totalTasks ?? 0),
+        pendingLeaves: Number(raw.pendingLeaves ?? 0),
         departments: Array.isArray(raw.departments) ? raw.departments : [],
         recentEmployees: Array.isArray(raw.recentEmployees) ? raw.recentEmployees : [],
         recentAttendance: Array.isArray(raw.recentAttendance) ? raw.recentAttendance : [],
@@ -100,476 +104,358 @@ export default function Dashboard() {
     fetchStats();
   }, [fetchStats, isEmployee, navigate]);
 
-  const formatCurrency = (val) => {
-    const num = parseFloat(val);
-    if (isNaN(num)) return '$0.00';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(num);
-  };
+  const currentDateFormatted = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
 
-  const taskCompletionPercent = stats.totalTasks > 0
-    ? Math.round((stats.completedTasks / stats.totalTasks) * 100)
-    : 0;
+  // Filtered Attendance for compact table
+  const filteredAttendance = useMemo(() => {
+    if (!attendanceSearch.trim()) return stats.recentAttendance || [];
+    const q = attendanceSearch.toLowerCase();
+    return (stats.recentAttendance || []).filter(
+      (a) =>
+        (a.employee_name && a.employee_name.toLowerCase().includes(q)) ||
+        (a.department && a.department.toLowerCase().includes(q)) ||
+        (a.status && a.status.toLowerCase().includes(q)) ||
+        String(a.employee_id || '').includes(q)
+    );
+  }, [stats.recentAttendance, attendanceSearch]);
+
+  // Filtered Tasks for compact table
+  const filteredTasks = useMemo(() => {
+    if (taskFilter === 'ALL') return stats.recentTasks || [];
+    if (taskFilter === 'OVERDUE') return (stats.recentTasks || []).filter((t) => t.is_overdue || t.status === 'Overdue');
+    return (stats.recentTasks || []).filter((t) => t.status === taskFilter);
+  }, [stats.recentTasks, taskFilter]);
 
   return (
-    <div className="dashboard-page">
-      {/* Welcome Banner */}
-      <div className="welcome-banner">
-        <div className="welcome-content">
-          <div className="badge-pill">
-            <Sparkles size={14} className="icon-gold" />
-            <span>MySQL <code>emp_db</code> Live Integration</span>
+    <div className="dashboard-page hr-theme-page">
+      {/* 1. Compact Dark Navy Header Panel */}
+      <div className="compact-navy-header">
+        <div className="header-meta-group">
+          <div className="admin-avatar-box">
+            <ShieldCheck size={24} color="#ffffff" />
           </div>
-          <h1 className="welcome-title">Employee Management System</h1>
-          <p className="welcome-subtitle">
-            Real-time management of workforce personnel, daily attendance tracking, and task assignments backed by MySQL database.
-          </p>
-          <div className="banner-quick-actions">
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate('/add')}
-              id="dashboard-btn-add"
-            >
-              <UserPlus size={18} />
-              <span>Add Employee</span>
-            </button>
-            <button
-              className="btn btn-outline-light"
-              onClick={() => navigate('/attendance')}
-              id="dashboard-btn-attendance"
-            >
-              <CalendarCheck size={18} />
-              <span>Mark Attendance</span>
-            </button>
-            <button
-              className="btn btn-outline-light"
-              onClick={() => navigate('/tasks')}
-              id="dashboard-btn-tasks"
-            >
-              <CheckSquare size={18} />
-              <span>Assign Task</span>
-            </button>
-            <button
-              className="btn btn-icon-ghost"
-              onClick={fetchStats}
-              title="Refresh Dashboard"
-              aria-label="Refresh Dashboard"
-              id="dashboard-btn-refresh"
-            >
-              <RefreshCw size={18} className={loading ? 'spin-icon' : ''} />
-            </button>
+          <div>
+            <h1 className="header-greeting">Welcome back, {user?.name || 'Administrator'}</h1>
+            <p className="header-submeta">
+              <span>HR Administrator</span>
+              <span className="dot-divider">•</span>
+              <span>{currentDateFormatted}</span>
+            </p>
           </div>
+        </div>
+
+        <div className="header-actions-group">
+          <button
+            type="button"
+            className="btn btn-navy-action"
+            onClick={fetchStats}
+            title="Refresh dashboard metrics"
+            disabled={loading}
+          >
+            <RefreshCw size={15} className={loading ? 'spin' : ''} />
+            <span>Refresh</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-navy-primary"
+            onClick={() => navigate('/admin/employees/add')}
+          >
+            <UserPlus size={15} />
+            <span>Add Employee</span>
+          </button>
         </div>
       </div>
 
       {/* Error Alert Banner */}
       {error && (
         <div className="dashboard-alert-banner" role="alert">
-          <AlertCircle size={22} className="alert-icon" />
+          <AlertCircle size={20} className="alert-icon" />
           <span className="alert-text">{error}</span>
-          <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
-            <button
-              className="btn btn-sm btn-secondary"
-              onClick={fetchStats}
-              id="dashboard-btn-retry"
-            >
-              <RefreshCw size={14} className={loading ? 'spin-icon' : ''} />
-              <span>Retry</span>
-            </button>
-            <button
-              className="btn btn-sm btn-primary"
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-              id="dashboard-btn-login-admin"
-            >
-              <span>Sign in as Admin</span>
-            </button>
-          </div>
+          <button className="btn btn-sm btn-secondary" onClick={fetchStats}>
+            Retry
+          </button>
         </div>
       )}
 
-      {/* Pending Leave Review Alert Banner if any leaves are pending */}
+      {/* Pending Leave Review Alert if leaves pending */}
       {stats.pendingLeaves > 0 && (
-        <div
-          className="leave-alert-banner flex-between mb-4"
-          style={{
-            background: '#fffbeb',
-            border: '1px solid #fde68a',
-            borderRadius: '12px',
-            padding: '14px 20px',
-            boxShadow: '0 2px 8px rgba(217, 119, 6, 0.1)',
-          }}
-        >
-          <div className="flex-align-center gap-12">
-            <div
-              style={{
-                background: '#fef3c7',
-                padding: '10px',
-                borderRadius: '50%',
-                color: '#d97706',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <CalendarOff size={22} />
-            </div>
-            <div>
-              <strong style={{ color: '#92400e', fontSize: '0.98rem' }}>
-                {stats.pendingLeaves} Employee Leave Application{stats.pendingLeaves > 1 ? 's' : ''} Awaiting Approval
-              </strong>
-              <p style={{ color: '#b45309', fontSize: '0.85rem', margin: 0 }}>
-                Employees have applied for time off. Review, approve, or reject these requests to automatically sync attendance.
-              </p>
-            </div>
+        <div className="pending-leave-alert-card">
+          <div className="flex-align-center gap-10">
+            <CalendarOff size={18} className="text-warning" />
+            <span className="text-sm font-semibold">
+              <strong>{stats.pendingLeaves}</strong> employee leave application(s) awaiting approval.
+            </span>
           </div>
           <button
-            className="btn btn-primary btn-sm"
+            type="button"
+            className="btn btn-sm btn-outline-warning"
             onClick={() => navigate('/admin/leaves')}
-            id="btn-dash-review-leaves"
           >
             Review Requests <ArrowRight size={14} />
           </button>
         </div>
       )}
 
-      {/* AI Workforce Intelligence Section */}
-      <AIWorkforceInsights onActionClick={(tab) => navigate(tab === 'leaves' ? '/admin/leaves' : '/admin/tasks')} />
-
-      {/* Primary KPI Metric Cards Row */}
-      <div className="stats-cards-grid">
+      {/* 2. Four Summary Cards in One Row on Desktop */}
+      <div className="kpi-summary-grid-4">
         {/* Card 1: Total Employees */}
-        <div className="stat-card stat-blue cursor-pointer" onClick={() => navigate('/employees')}>
-          <div className="stat-card-icon-box">
-            <Users size={24} />
+        <div className="kpi-card" onClick={() => navigate('/admin/employees')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Total Employees</span>
+            <div className="kpi-icon-pill blue">
+              <Users size={18} />
+            </div>
           </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">Total Employees</span>
-            <h2 className="stat-card-value">
-              {loading ? '...' : stats.totalEmployees}
-            </h2>
-            <span className="stat-card-meta">table: employees</span>
-          </div>
+          <div className="kpi-value">{loading ? '...' : stats.totalEmployees}</div>
+          <div className="kpi-footer-meta">Active staff in directory</div>
         </div>
 
         {/* Card 2: Present Today */}
-        <div className="stat-card stat-teal cursor-pointer" onClick={() => navigate('/attendance')}>
-          <div className="stat-card-icon-box">
-            <UserCheck size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">Present Today</span>
-            <h2 className="stat-card-value">
-              {loading ? '...' : stats.presentToday}
-            </h2>
-            <span className="stat-card-meta">
-              {stats.lateToday > 0 ? `${stats.lateToday} arrived late` : 'Live attendance'}
-            </span>
-          </div>
-        </div>
-
-        {/* Card 3: Absent / Leave Today */}
-        <div className="stat-card stat-red cursor-pointer" onClick={() => navigate('/attendance')}>
-          <div className="stat-card-icon-box">
-            <UserX size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">Absent / Leave</span>
-            <h2 className="stat-card-value">
-              {loading ? '...' : stats.absentToday + stats.leaveToday}
-            </h2>
-            <span className="stat-card-meta">
-              {stats.leaveToday} approved leave
-            </span>
-          </div>
-        </div>
-
-        {/* Card 4: Leave Requests */}
-        <div
-          className={`stat-card stat-amber cursor-pointer ${
-            stats.pendingLeaves > 0 ? 'border-amber' : ''
-          }`}
-          onClick={() => navigate('/admin/leaves')}
-        >
-          <div className="stat-card-icon-box">
-            <CalendarOff size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">Pending Leaves</span>
-            <h2 className="stat-card-value text-amber-700">
-              {loading ? '...' : stats.pendingLeaves || 0}
-            </h2>
-            <span className="stat-card-meta">
-              {stats.totalLeaves ? `${stats.totalLeaves} total applied` : 'Click to review'}
-            </span>
-          </div>
-        </div>
-
-        {/* Card 5: Tasks Pending & In Progress */}
-        <div className="stat-card stat-purple cursor-pointer" onClick={() => navigate('/tasks')}>
-          <div className="stat-card-icon-box">
-            <CheckSquare size={24} />
-          </div>
-          <div className="stat-card-content">
-            <span className="stat-card-label">Active Tasks</span>
-            <h2 className="stat-card-value">
-              {loading ? '...' : stats.pendingTasks + stats.inProgressTasks}
-            </h2>
-            <span className="stat-card-meta">
-              {stats.completedTasks} completed
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Task Completion Progress Bar Card */}
-      <div className="task-progress-card">
-        <div className="progress-header">
-          <div>
-            <h3 className="progress-title">Task Completion Progress</h3>
-            <p className="progress-sub">
-              {stats.completedTasks} of {stats.totalTasks} total assigned tasks completed across all departments
-            </p>
-          </div>
-          <div className="progress-badge">
-            {taskCompletionPercent}% Completed
-          </div>
-        </div>
-        <div className="progress-bar-track-large">
-          <div
-            className="progress-bar-fill-large"
-            style={{ width: `${taskCompletionPercent}%` }}
-          ></div>
-        </div>
-        <div className="task-metrics-breakdown">
-          <span className="metric-chip chip-pending">
-            <Clock size={12} /> {stats.pendingTasks} Pending
-          </span>
-          <span className="metric-chip chip-progress">
-            <TrendingUp size={12} /> {stats.inProgressTasks} In Progress
-          </span>
-          <span className="metric-chip chip-completed">
-            <CheckSquare size={12} /> {stats.completedTasks} Completed
-          </span>
-          {stats.overdueTasks > 0 && (
-            <span className="metric-chip chip-overdue">
-              <AlertTriangle size={12} /> {stats.overdueTasks} Overdue
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Two Column Layout: Department Distribution & Recent Employees */}
-      <div className="dashboard-grid-sections">
-        {/* Department-wise Employee Counts */}
-        <div className="dashboard-section-card">
-          <div className="section-card-header">
-            <div className="header-title-box">
-              <Building size={20} className="text-blue" />
-              <h3>Department Breakdown & Payroll</h3>
+        <div className="kpi-card" onClick={() => navigate('/admin/attendance')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Present Today</span>
+            <div className="kpi-icon-pill green">
+              <UserCheck size={18} />
             </div>
-            <span className="section-badge">
-              {stats.departments ? stats.departments.length : 0} Departments
-            </span>
+          </div>
+          <div className="kpi-value">{loading ? '...' : stats.presentToday}</div>
+          <div className="kpi-footer-meta">
+            {stats.lateToday > 0 ? `${stats.lateToday} checked in late` : 'Live attendance records'}
+          </div>
+        </div>
+
+        {/* Card 3: Absent Today */}
+        <div className="kpi-card" onClick={() => navigate('/admin/attendance')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Absent Today</span>
+            <div className="kpi-icon-pill red">
+              <UserX size={18} />
+            </div>
+          </div>
+          <div className="kpi-value">{loading ? '...' : stats.absentToday + stats.leaveToday}</div>
+          <div className="kpi-footer-meta">
+            {stats.leaveToday > 0 ? `${stats.leaveToday} on approved leave` : 'Unmarked or absent'}
+          </div>
+        </div>
+
+        {/* Card 4: Active Tasks */}
+        <div className="kpi-card" onClick={() => navigate('/admin/tasks')}>
+          <div className="kpi-card-header">
+            <span className="kpi-label">Active Tasks</span>
+            <div className="kpi-icon-pill amber">
+              <CheckSquare size={18} />
+            </div>
+          </div>
+          <div className="kpi-value">{loading ? '...' : stats.pendingTasks + stats.inProgressTasks}</div>
+          <div className="kpi-footer-meta">
+            {stats.completedTasks} completed to date
+          </div>
+        </div>
+      </div>
+
+      {/* Two Column Layout: Attendance Overview & Task Overview */}
+      <div className="dashboard-data-grid">
+        {/* Attendance Overview Card */}
+        <div className="content-card">
+          <div className="content-card-header">
+            <div>
+              <h3 className="content-card-title">Today's Attendance Overview</h3>
+              <p className="content-card-sub">Real-time attendance punches recorded for today</p>
+            </div>
+            <button
+              type="button"
+              className="btn-text-action"
+              onClick={() => navigate('/admin/attendance')}
+            >
+              View Full Log <ArrowRight size={14} />
+            </button>
           </div>
 
-          <div className="section-card-body">
-            {loading ? (
-              <div className="section-loading">Calculating department statistics from MySQL...</div>
-            ) : !stats.departments || stats.departments.length === 0 ? (
-              <div className="recent-empty">
-                <p>No department records found in database.</p>
-              </div>
-            ) : (
-              <div className="dept-distribution-list">
-                {stats.departments.map((dept) => {
-                  const percentage = stats.totalEmployees > 0
-                    ? Math.round((dept.count / stats.totalEmployees) * 100)
-                    : 0;
+          <div className="table-search-row">
+            <div className="search-field-compact">
+              <Search size={14} className="search-icon-sm" />
+              <input
+                type="text"
+                placeholder="Search by name, ID, or department..."
+                value={attendanceSearch}
+                onChange={(e) => setAttendanceSearch(e.target.value)}
+                className="input-compact"
+              />
+            </div>
+          </div>
 
-                  return (
-                    <div key={dept.name} className="dept-item">
-                      <div className="dept-item-header">
-                        <span className="dept-name-label">{dept.name}</span>
-                        <div className="dept-count-tags">
-                          <span className="dept-count-badge">
-                            {dept.count} {dept.count === 1 ? 'employee' : 'employees'}
+          <div className="table-responsive">
+            <table className="hr-compact-table">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>ID</th>
+                  <th>Department</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-4 text-muted">
+                      Loading attendance records...
+                    </td>
+                  </tr>
+                ) : filteredAttendance.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-4 text-muted">
+                      No attendance punches recorded yet for today.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredAttendance.map((att, idx) => (
+                    <tr key={att.id || idx}>
+                      <td>
+                        <strong className="text-navy">{att.employee_name || 'Staff Member'}</strong>
+                      </td>
+                      <td>
+                        <code className="code-id">#{att.employee_id || idx + 1}</code>
+                      </td>
+                      <td>{att.department || 'General'}</td>
+                      <td>{att.check_in || '—'}</td>
+                      <td>{att.check_out || '—'}</td>
+                      <td>
+                        <span className={`status-pill badge-${(att.status || 'present').toLowerCase()}`}>
+                          {att.status || 'Present'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Task Overview Card */}
+        <div className="content-card">
+          <div className="content-card-header">
+            <div>
+              <h3 className="content-card-title">Task Overview</h3>
+              <p className="content-card-sub">Assigned deliverables, priorities, and deadlines</p>
+            </div>
+            <button
+              type="button"
+              className="btn-text-action"
+              onClick={() => navigate('/admin/tasks')}
+            >
+              Manage Tasks <ArrowRight size={14} />
+            </button>
+          </div>
+
+          <div className="table-search-row">
+            <div className="task-filter-chips">
+              <button
+                type="button"
+                className={`filter-chip ${taskFilter === 'ALL' ? 'active' : ''}`}
+                onClick={() => setTaskFilter('ALL')}
+              >
+                All ({stats.recentTasks?.length || 0})
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${taskFilter === 'Pending' ? 'active' : ''}`}
+                onClick={() => setTaskFilter('Pending')}
+              >
+                Pending
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${taskFilter === 'In Progress' ? 'active' : ''}`}
+                onClick={() => setTaskFilter('In Progress')}
+              >
+                In Progress
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${taskFilter === 'Completed' ? 'active' : ''}`}
+                onClick={() => setTaskFilter('Completed')}
+              >
+                Completed
+              </button>
+            </div>
+          </div>
+
+          <div className="table-responsive">
+            <table className="hr-compact-table">
+              <thead>
+                <tr>
+                  <th>Task Title</th>
+                  <th>Assignee</th>
+                  <th>Due Date</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-muted">
+                      Loading tasks...
+                    </td>
+                  </tr>
+                ) : filteredTasks.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-muted">
+                      No matching tasks found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTasks.map((t) => {
+                    const isOverdue = t.is_overdue || (t.days_until_due !== undefined && t.days_until_due < 0);
+                    return (
+                      <tr key={t.id}>
+                        <td>
+                          <div className="flex-align-center gap-6">
+                            <strong className="text-navy">{t.title}</strong>
+                            {isOverdue && (
+                              <span className="overdue-micro-badge" title="Past target due date">
+                                <AlertTriangle size={11} /> Overdue
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>{t.employee_name || 'Unassigned'}</td>
+                        <td>{t.due_date || 'No deadline'}</td>
+                        <td>
+                          <span className={`priority-tag ${(t.priority || 'medium').toLowerCase()}`}>
+                            {t.priority || 'Medium'}
                           </span>
-                          <span className="dept-avg-salary">
-                            Avg: {formatCurrency(dept.avgSalary)}
+                        </td>
+                        <td>
+                          <span
+                            className={`status-pill ${
+                              t.status === 'Completed'
+                                ? 'badge-completed'
+                                : t.status === 'In Progress'
+                                ? 'badge-inprogress'
+                                : 'badge-pending'
+                            }`}
+                          >
+                            {t.status}
                           </span>
-                        </div>
-                      </div>
-                      <div className="progress-bar-track">
-                        <div
-                          className="progress-bar-fill"
-                          style={{ width: `${Math.max(percentage, 5)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Recently Added Employees Preview */}
-        <div className="dashboard-section-card">
-          <div className="section-card-header">
-            <div className="header-title-box">
-              <Users size={20} className="text-purple" />
-              <h3>Recently Added Employees</h3>
-            </div>
-            <button
-              className="btn-text-link"
-              onClick={() => navigate('/employees')}
-            >
-              View All <ArrowRight size={14} />
-            </button>
-          </div>
-
-          <div className="section-card-body">
-            {loading ? (
-              <div className="section-loading">Fetching latest employees from MySQL...</div>
-            ) : !stats.recentEmployees || stats.recentEmployees.length === 0 ? (
-              <div className="recent-empty">
-                <p>No employees registered yet.</p>
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => navigate('/add')}
-                >
-                  Add First Employee
-                </button>
-              </div>
-            ) : (
-              <div className="recent-employees-list">
-                {stats.recentEmployees.map((emp) => (
-                  <div key={emp.id} className="recent-employee-row">
-                    <div className="recent-avatar">
-                      {(emp.name || 'E').charAt(0).toUpperCase()}
-                    </div>
-                    <div className="recent-info">
-                      <h4 className="recent-name">{emp.name}</h4>
-                      <p className="recent-email">{emp.email}</p>
-                    </div>
-                    <div className="recent-dept-pill">
-                      {emp.department || 'General'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Second Grid Row: Recent Attendance & Recent Tasks */}
-      <div className="dashboard-grid-sections mt-6">
-        {/* Recent Attendance Activity */}
-        <div className="dashboard-section-card">
-          <div className="section-card-header">
-            <div className="header-title-box">
-              <CalendarCheck size={20} className="text-teal" />
-              <h3>Recent Attendance Records</h3>
-            </div>
-            <button
-              className="btn-text-link"
-              onClick={() => navigate('/attendance')}
-            >
-              Open Attendance <ArrowRight size={14} />
-            </button>
-          </div>
-
-          <div className="section-card-body">
-            {loading ? (
-              <div className="section-loading">Loading recent attendance from MySQL...</div>
-            ) : !stats.recentAttendance || stats.recentAttendance.length === 0 ? (
-              <div className="recent-empty">
-                <p>No attendance records logged yet.</p>
-                <button
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => navigate('/attendance')}
-                >
-                  Mark Attendance
-                </button>
-              </div>
-            ) : (
-              <div className="recent-employees-list">
-                {stats.recentAttendance.map((att) => (
-                  <div key={att.id} className="recent-employee-row">
-                    <div className="recent-avatar teal">
-                      {(att.employee_name || 'E').charAt(0).toUpperCase()}
-                    </div>
-                    <div className="recent-info">
-                      <h4 className="recent-name">{att.employee_name}</h4>
-                      <p className="recent-email">
-                        {att.date} • {att.check_in ? `In: ${att.check_in}` : 'No check-in'}
-                      </p>
-                    </div>
-                    <div className={`status-pill badge-${att.status.toLowerCase()}`}>
-                      {att.status}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Tasks Activity */}
-        <div className="dashboard-section-card">
-          <div className="section-card-header">
-            <div className="header-title-box">
-              <CheckSquare size={20} className="text-amber" />
-              <h3>Recent Tasks Assigned</h3>
-            </div>
-            <button
-              className="btn-text-link"
-              onClick={() => navigate('/tasks')}
-            >
-              Open Tasks <ArrowRight size={14} />
-            </button>
-          </div>
-
-          <div className="section-card-body">
-            {loading ? (
-              <div className="section-loading">Loading recent tasks from MySQL...</div>
-            ) : !stats.recentTasks || stats.recentTasks.length === 0 ? (
-              <div className="recent-empty">
-                <p>No tasks assigned yet.</p>
-                <button
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => navigate('/tasks')}
-                >
-                  Assign Task
-                </button>
-              </div>
-            ) : (
-              <div className="recent-employees-list">
-                {stats.recentTasks.map((t) => (
-                  <div key={t.id} className="recent-employee-row">
-                    <div className="recent-avatar purple">
-                      {(t.employee_name || 'E').charAt(0).toUpperCase()}
-                    </div>
-                    <div className="recent-info">
-                      <h4 className="recent-name line-clamp-1">{t.title}</h4>
-                      <p className="recent-email">
-                        Assigned to: {t.employee_name} • Due: {t.due_date || 'No due date'}
-                      </p>
-                    </div>
-                    <div className={`status-pill ${t.status === 'Completed' ? 'badge-present' : t.status === 'In Progress' ? 'badge-late' : 'badge-absent'}`}>
-                      {t.status}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
