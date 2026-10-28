@@ -46,7 +46,7 @@ export default function EmployeeSidebar({ isOpen, onClose }) {
               <Briefcase size={20} color="#ffffff" />
             </div>
             <div className="brand-text">
-              <span className="brand-title">StaffPulse EMS</span>
+              <span className="brand-title">Decconz EMS</span>
               <span className="brand-subtitle">Employee Portal</span>
             </div>
           </div>

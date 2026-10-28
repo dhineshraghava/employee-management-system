@@ -25,7 +25,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <Building2 size={24} color="#ffffff" />
             </div>
             <div className="brand-text">
-              <span className="brand-title">StaffPulse</span>
+              <span className="brand-title">Decconz EMS</span>
               <span className="brand-subtitle">Employee System</span>
             </div>
           </div>

@@ -319,7 +319,7 @@ export async function forgotPassword(req, res) {
     if (admins.length === 0 && employees.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No account registered with this email address was found in StaffPulse EMS.',
+        message: 'No account registered with this email address was found in Decconz EMS.',
       });
     }
 

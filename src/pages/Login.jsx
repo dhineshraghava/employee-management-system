@@ -186,7 +186,7 @@ export default function Login() {
           <div className="login-logo-badge">
             <Building2 size={30} color="#ffffff" />
           </div>
-          <h1 className="login-app-name">StaffPulse EMS</h1>
+          <h1 className="login-app-name">Decconz EMS</h1>
           <h2 className="login-form-heading">Sign in to your account</h2>
           <p className="login-form-subtext">
             Enter your registered email address or employee ID to access your dashboard.
@@ -386,7 +386,7 @@ export default function Login() {
               {forgotStep === 1 ? (
                 <form onSubmit={handleForgotRequest} className="modal-form-flow">
                   <p className="modal-instructions">
-                    Enter the email address registered with your StaffPulse EMS account. We will issue a verification code to reset your password.
+                    Enter the email address registered with your Decconz EMS account. We will issue a verification code to reset your password.
                   </p>
                   <div className="form-field-group">
                     <label className="field-label">Email Address</label>

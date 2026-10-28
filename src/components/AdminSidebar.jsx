@@ -60,7 +60,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
               <ShieldCheck size={20} color="#ffffff" />
             </div>
             <div className="brand-text">
-              <span className="brand-title">StaffPulse EMS</span>
+              <span className="brand-title">Decconz EMS</span>
               <span className="brand-subtitle">HR Admin Portal</span>
             </div>
           </div>

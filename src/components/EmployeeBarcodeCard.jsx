@@ -50,7 +50,7 @@ export default function EmployeeBarcodeCard({ employee, onClose, isModal = false
     e?.stopPropagation();
     if (canvasRef.current) {
       const link = document.createElement('a');
-      link.download = `StaffPulse_${barcodeValue}_Badge.png`;
+      link.download = `Decconz_${barcodeValue}_Badge.png`;
       link.href = canvasRef.current.toDataURL('image/png');
       link.click();
     }
@@ -78,7 +78,7 @@ export default function EmployeeBarcodeCard({ employee, onClose, isModal = false
       <div className="card-navy-top-strip">
         <div className="strip-brand">
           <Building2 size={15} className="strip-logo-icon" />
-          <span className="strip-company-name">StaffPulse EMS</span>
+          <span className="strip-company-name">Decconz EMS</span>
         </div>
         <span className="strip-employee-id">{displayId}</span>
       </div>

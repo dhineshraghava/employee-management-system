@@ -35,8 +35,8 @@ export async function applyLeave(req, res) {
       });
     }
 
-    const startDate = new Date(start_date);
-    const endDate = new Date(end_date);
+    const startDate = new Date(start_date + 'T00:00:00');
+    const endDate = new Date(end_date + 'T00:00:00');
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return res.status(400).json({
@@ -52,9 +52,16 @@ export async function applyLeave(req, res) {
       });
     }
 
-    // Calculate days
-    const diffTime = Math.abs(endDate - startDate);
-    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    // Calculate days inclusive
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const days = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    if (days <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Leave duration must be at least 1 day.',
+      });
+    }
 
     // Check for overlapping active leave requests (Pending or Approved)
     const [overlapping] = await pool.query(
@@ -78,7 +85,7 @@ export async function applyLeave(req, res) {
       });
     }
 
-    const validTypes = ['Casual Leave', 'Sick Leave', 'Paid Leave', 'Emergency Leave', 'Unpaid Leave'];
+    const validTypes = ['Casual Leave', 'Sick Leave', 'Earned Leave', 'Paid Leave', 'Emergency Leave', 'Unpaid Leave'];
     const chosenType = validTypes.includes(leave_type) ? leave_type : 'Casual Leave';
 
     const [result] = await pool.query(
